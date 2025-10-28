@@ -1,7 +1,8 @@
 // Mapeia URLs públicas para arquivos no disco
 const STATIC_ROUTES = {
   '/': 'src/pages/index.html',
-  '/conta': 'src/pages/Conta/index.html',
+  '/conta': 'src/pages/Conta/logged.html',
+  '/register' : 'src/pages/noSession/register.html'
 };
 
 // Função auxiliar para verificar se uma URL começa com um prefixo
