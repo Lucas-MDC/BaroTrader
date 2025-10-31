@@ -6,8 +6,8 @@ config:
 ---
 flowchart LR
 
-    classDef warning fill:#f76808
-    classDef suggest fill:#4DE865
+    classDef warning fill: #be4c00ff, font-weight: bold, font-size: 13pt
+    classDef suggest fill: #007211ff, font-weight: bold, font-size: 13pt
         
     subgraph Unlogged_Area
     loginPage["Login Page (start)"]
