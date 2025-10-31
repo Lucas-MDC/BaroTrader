@@ -11,7 +11,7 @@ body {
 }
 
 header {
-    position: fixed;
+    position: sticky;
     background-color: #FFFFFF;
     box-shadow: 0 2px 8px rgba(15,23,42,0.06);
     height: 50px;
@@ -39,7 +39,7 @@ header h1 {
     justify-self: end;
 }
 
-main{
+div.container {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -51,7 +51,7 @@ main{
     border-radius: 25px;
 }
 
-main input, main button {
+div.container input, div.container button {
     display: block;
     margin: 10px auto;
 
@@ -60,7 +60,7 @@ main input, main button {
     color: #0F1724;
 }
 
-main button {
+div.container button {
     background: #00B3A6;
     color: #fff;
     border-color: transparent;
@@ -79,4 +79,17 @@ section{
     padding: 15px;
     border-radius: 15px;
     color: #0F1724;
+}
+
+nav ul{
+    /* background-color: brown; */
+    list-style-type: none;
+    
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+}
+
+nav ul li{
+    margin: 15px 15px 0px 15px;
 }
