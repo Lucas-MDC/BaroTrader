@@ -8,5 +8,5 @@ btn_login.addEventListener('click', (event) => {
     event.preventDefault();
     
     // Redireciona para a página logged.html
-    window.location.href = '/conta';
+    window.location.href = '/home';
 });
