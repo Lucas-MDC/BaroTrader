@@ -1,15 +1,29 @@
 const express = require('express')
-const app = express()
-const port = 3000
+const routes = require('./routes/index_routes.js');
+const path = require('path');
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+const app = express();
+const port = 3000;
 
-app.get('/health', (req, res) => {
-  res.send('OK')
-})
+const SRC_ROOT = path.join(__dirname);
+app.set('SRC_ROOT', SRC_ROOT);
+
+app.use(express.static(path.join(SRC_ROOT, 'public')));
+
+// montar o “grande router”
+app.use('/', routes);
+
+// 404 padrão
+app.use((req, res) => {
+  res.status(404).send('Página não encontrada');
+});
+
+// erro padrão
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).send('Erro interno');
+});
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
-})
+});
