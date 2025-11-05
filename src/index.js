@@ -8,7 +8,7 @@ const port = 3000;
 const SRC_ROOT = path.join(__dirname);
 app.set('SRC_ROOT', SRC_ROOT);
 
-app.use(express.static(path.join(SRC_ROOT, 'public')));
+app.use('/static', express.static(path.join(SRC_ROOT, 'public')));
 
 // montar o “grande router”
 app.use('/', routes);

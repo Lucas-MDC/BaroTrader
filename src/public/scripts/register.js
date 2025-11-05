@@ -6,5 +6,5 @@ btn_register.addEventListener('click', (event) => {
     event.preventDefault();
     
     // Redireciona para a página logged.html
-    window.location.href = '/home';
+    window.location.href = '/static/pages/account/homeInternal.html';
 });

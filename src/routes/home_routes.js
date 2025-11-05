@@ -5,7 +5,8 @@ const router = Router();
 
 router.get('/', (req, res) => {
   const srcRoot = req.app.get('SRC_ROOT');
-  res.sendFile(path.join(srcRoot, 'public', 'pages', 'account', 'logged.html'));
+  res.sendFile(path.join(srcRoot, 'public', 'pages', 'home.html'));
+
 });
 
 module.exports = router;
