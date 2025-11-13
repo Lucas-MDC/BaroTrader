@@ -1,6 +1,10 @@
-const express = require('express')
-const routes = require('./routes/index_routes.js');
-const path = require('path');
+import express from 'express';
+import routes from './routes/index_routes.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = 3000;
@@ -19,7 +23,7 @@ app.use((req, res) => {
 });
 
 // erro padrão
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   console.error(err);
   res.status(500).send('Erro interno');
 });
