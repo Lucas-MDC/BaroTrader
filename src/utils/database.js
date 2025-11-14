@@ -13,17 +13,17 @@ console.log(ddl_status); // true/false
 
 // INSERT (use parâmetros nomeados!)
 const insert_status = await db.execute(
-  `INSERT INTO users (name) VALUES (?)`,
-  [ 'Teste' ]
+  `INSERT INTO users (name) VALUES ($name)`,
+  { $name: 'Teste' }
 );
 console.log(insert_status); // true/false
 
 // SELECT com bind de parâmetros
-const query_params = [1];
+const query_params = {$id: 1};
 const rows = await db.query(
   `SELECT id, name
      FROM users
-    WHERE id = ?
+    WHERE id = $id
   `,
   query_params
 );

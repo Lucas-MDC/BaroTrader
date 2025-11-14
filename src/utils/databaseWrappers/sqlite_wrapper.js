@@ -28,8 +28,12 @@ export async function SQLite(dbPath) {
 
   async function execute(sql, params = {}) {
     try {
-      const resp = await db.run(sql, params);
-      return resp.changes > 0;
+      const stmt = await db.prepare(sql);
+      await stmt.bind(params);
+
+      await stmt.run();
+      await stmt.finalize();
+      return true // resp.changes > 0;
       
     } catch (error) {
       console.error('Error executing SQL:', error);
@@ -39,7 +43,12 @@ export async function SQLite(dbPath) {
 
   async function query(sql, params = {}) {
     try {
-      return await db.all(sql, params);
+      const stmt = await db.prepare(sql);
+      await stmt.bind(params);
+      
+      const rows = await stmt.all();
+      await stmt.finalize();
+      return rows;
 
     } catch (error) {
       console.error('Error querying SQL:', error);
