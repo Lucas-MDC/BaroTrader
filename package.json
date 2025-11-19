@@ -20,7 +20,9 @@
   },
   "homepage": "https://github.com/Lucas-MDC/BaroTrader#readme",
   "dependencies": {
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "pg-promise": "^12.3.0",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7"
   },
