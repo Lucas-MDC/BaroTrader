@@ -37,19 +37,22 @@ const dbConfig_user = {
 
 const rolname = 'base_role_op';
 
-async function setupDatabase() {
-    console.log('Setting up database and user...');
-    const ownerConn = await connectWithRetries(
-        dbConfig_owner, PostgreSQL
-    );
-    
+async function setupBasePermissions() {
+
+    console.log('||| Setting up base permissions and user... |||');
+    let ownerConn = null;
+
     try {
+
+        ownerConn = await connectWithRetries(
+            dbConfig_owner, PostgreSQL
+        );
         
         const userCheckStmt = await loadSql(checkUserQuery);
         const roleCheck = await ownerConn.query(
             userCheckStmt, { user: dbConfig_user.user }
         );
-
+        
         if (!roleCheck || roleCheck.length === 0) {
             
             const createUserStmt = await loadSql(createUserQuery);
@@ -61,8 +64,26 @@ async function setupDatabase() {
 
         } else {
             console.log(`ROLE ${dbConfig_user.user} já existe`);
-
         }
+
+    } catch (err) {
+        console.error('Error on setup user', err);
+        throw err;
+
+    } finally {
+        await ownerConn.close();
+    }
+}
+
+async function setupDatabase() {
+
+    console.log('||| Setting up database... |||');
+    let ownerConn = null;
+    
+    try {
+        ownerConn = await connectWithRetries(
+            dbConfig_owner, PostgreSQL
+        );
 
         // criar database se não existir
         const dbCheckStmt = await loadSql(checkDatabaseQuery);
@@ -73,7 +94,7 @@ async function setupDatabase() {
             const createDbStmt = await loadSql(createDatabaseQuery);
             await ownerConn.execute(
                 createDbStmt, {
-                    user: dbConfig_user,
+                    user: dbConfig_user.user,
                     database: dbConfig_user.database
                 }
             );
@@ -87,27 +108,32 @@ async function setupDatabase() {
     } catch (err) {
         console.error('Error on setup database', err);
         throw err;
+
     } finally {
         await ownerConn.close();
     }
 }
 
-async function createSchemaAndPermissions() {
-    console.log('Creating schema and permissions...');
+async function createSchema() {
+    console.log('||| Creating schema and permissions... |||');
     // aguardar um pouco para garantir que o novo DB esteja disponível
     await sleep(500);
 
-    const ownerDbConn = await connectWithRetries(
-        { ...dbConfig_owner, database: dbConfig_user.database }, 
-        PostgreSQL
-    );
-
+    let ownerDbConn = null;
+    
     try {
+
+        ownerDbConn = await connectWithRetries({ 
+            ...dbConfig_owner, 
+            database: dbConfig_user.database 
+        }, PostgreSQL);
+
         // criar role de permissão se não existir
         const roleCheckStmt = await loadSql(checkRoleQuery);
         const roleCheck = await ownerDbConn.query(
             roleCheckStmt, { rolname: rolname }
         );
+
         if (!roleCheck || roleCheck.length === 0) {
             const createRoleStmt = await loadSql(createRoleQuery);
             await ownerDbConn.execute(
@@ -117,18 +143,6 @@ async function createSchemaAndPermissions() {
         } else {
             console.log(`ROLE ${rolname} já existe`);
         }
-        
-        // permissões e defaults
-        const permissionsStmt = await loadSql(permissionsQuery);
-        await ownerDbConn.execute(permissionsStmt, {
-                rolname: rolname,
-                user: dbConfig_user.user
-            });
-
-        // criar tabela se não existir
-        const createUserTableStmt = await loadSql(createUserTableQuery);
-        await ownerDbConn.execute(createUserTableStmt);
-        console.log('Schema e permissões asseguradas em barotrader_db');
 
     } catch (err) {
         console.error('Error on permissions creation', err);
@@ -139,13 +153,50 @@ async function createSchemaAndPermissions() {
     }
 }
 
-async function runAsUser() {
-    console.log('Running operations as db_user_barotrader_dev...');
-    const userConn = await connectWithRetries(
-        dbConfig_user, PostgreSQL
-    );
+async function buildPermissions() {
+
+    console.log('||| Building schema permissions... |||');
+    let ownerDbConn = null;
 
     try {
+
+        ownerDbConn = await connectWithRetries({ 
+            ...dbConfig_owner, 
+            database: dbConfig_user.database 
+        }, PostgreSQL);
+
+        // permissões e defaults
+        const permissionsStmt = await loadSql(permissionsQuery);
+        await ownerDbConn.execute(permissionsStmt, {
+            rolname: rolname,
+            user: dbConfig_user.user
+        });
+
+        // criar tabela se não existir
+        const createUserTableStmt = await loadSql(createUserTableQuery);
+        await ownerDbConn.execute(createUserTableStmt);
+        console.log('Schema e permissões asseguradas em barotrader_db');
+
+    } catch (err) {
+        console.error('Error on building permissions', err);
+        throw err;
+
+    } finally {
+        await ownerDbConn.close();
+    }
+}
+
+async function runAsUser() {
+    console.log('Running operations as db_user_barotrader_dev...');
+
+    let userConn = null;
+
+    try {
+
+        userConn = await connectWithRetries(
+            dbConfig_user, PostgreSQL
+        );
+
         const insertStmt = await loadSql(insertUserQuery);
         await userConn.execute(
             insertStmt, { name: 'Teste' }
@@ -171,11 +222,15 @@ async function runAsUser() {
 
 async function cleanup() {
     console.log('Cleaning up: dropping database and roles...');
-    const ownerConn = await connectWithRetries(
-        dbConfig_owner, PostgreSQL
-    );
+
+    let ownerConn = null;
     
     try {
+
+        ownerConn = await connectWithRetries(
+            dbConfig_owner, PostgreSQL
+        );
+
         const cleanDbStmt = await loadSql(cleanDbQuery);
         await ownerConn.execute(cleanDbStmt, {
             database: dbConfig_user.database,
@@ -187,7 +242,7 @@ async function cleanup() {
             user: dbConfig_user.user
         });
         console.log(`User ${dbConfig_user.user} dropped.`);
-        
+
         const cleanDbRoleStmt = await loadSql(cleanDbRoleQuery);
         await ownerConn.execute(cleanDbRoleStmt, {
             rolname: rolname
@@ -201,15 +256,16 @@ async function cleanup() {
 
     } finally {
         await ownerConn.close();
-
     }
 }
 
 const way = false;
 
 if (way) {
+    await setupBasePermissions();
     await setupDatabase();
-    await createSchemaAndPermissions();
+    await createSchema();
+    await buildPermissions();
     await runAsUser();
     
 } else { 

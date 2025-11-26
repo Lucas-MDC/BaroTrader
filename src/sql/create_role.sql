@@ -1,1 +1,1 @@
-CREATE ROLE "${rolname}" NOLOGIN;
+CREATE ROLE ${rolname:name} NOLOGIN;
