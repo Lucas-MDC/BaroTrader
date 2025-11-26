@@ -1,6 +1,21 @@
 import dotenv from 'dotenv';
 import process from 'process';
 import { PostgreSQL } from './databaseWrappers/postgresql_wrapper.js';
+import { sleep, connectWithRetries, loadSql } from './database_utils.js';
+
+const checkUserQuery = 'check_user.sql';
+const createUserQuery = 'create_user.sql';
+const checkDatabaseQuery = 'check_db.sql';
+const createDatabaseQuery = 'create_db.sql';
+const checkRoleQuery = 'check_role.sql';
+const createRoleQuery = 'create_role.sql';
+const permissionsQuery = 'permissions.sql';
+const createUserTableQuery = 'create_user_table.sql';
+const insertUserQuery = 'insert_user_table.sql';
+const selectUserTableQuery = 'select_user_table_1.sql';
+const cleanDbQuery = 'clean_db.sql';
+const cleanDbUserQuery = 'clean_db_user.sql';
+const cleanDbRoleQuery = 'clean_db_role.sql';
 
 dotenv.config();
 
@@ -9,7 +24,7 @@ const dbConfig_owner = {
     port: process.env.PORT,
     database: process.env.DB_ADMIN_DBNAME,
     user: process.env.DB_ADMIN_USER,
-    password: process.env.DB_ADMIN_PASS,
+    password: process.env.DB_ADMIN_PASS
 };
 
 const dbConfig_user = {
@@ -17,45 +32,31 @@ const dbConfig_user = {
     port: process.env.PORT,
     database: process.env.DB_DBNAME,
     user: process.env.DB_USER,
-    password: process.env.DB_PASS,
+    password: process.env.DB_PASS
 };
 
 const rolname = 'base_role_op';
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-async function connectWithRetries(
-    config, retries = 3, baseDelay = 500
-) {
-    for (let i = 0; i < retries; i++) {
-        try {
-            let p = await PostgreSQL(config);
-            console.log(`Connected to DB as ${config.user}`);
-            return p;
-
-        } catch (err) {
-            if (i === retries - 1) throw err;
-            console.warn(`Connection attempt ${i + 1} failed. Retrying in ${baseDelay * (2 ** i)} ms...`);
-            await sleep(baseDelay * (2 ** i));
-
-        }
-    }
-}
-
 async function setupDatabase() {
     console.log('Setting up database and user...');
-    const ownerConn = await connectWithRetries(dbConfig_owner);
+    const ownerConn = await connectWithRetries(
+        dbConfig_owner, PostgreSQL
+    );
+    
     try {
-        // criar role do usuário se não existir
-        // no PostgreSQL, roles e users são equivalentes
+        
+        const userCheckStmt = await loadSql(checkUserQuery);
         const roleCheck = await ownerConn.query(
-            `SELECT 1 FROM pg_roles WHERE rolname = '${dbConfig_user.user}';`
+            userCheckStmt, { user: dbConfig_user.user }
         );
+
         if (!roleCheck || roleCheck.length === 0) {
-            await ownerConn.execute(`
-                CREATE ROLE ${dbConfig_user.user}
-                LOGIN PASSWORD '${dbConfig_user.password}';
-            `);
+            
+            const createUserStmt = await loadSql(createUserQuery);
+            await ownerConn.execute(createUserStmt, {
+                user : dbConfig_user.user, 
+                password: dbConfig_user.password
+            });
             console.log(`ROLE ${dbConfig_user.user} criado`);
 
         } else {
@@ -64,13 +65,18 @@ async function setupDatabase() {
         }
 
         // criar database se não existir
+        const dbCheckStmt = await loadSql(checkDatabaseQuery);
         const dbCheck = await ownerConn.query(
-            `SELECT 1 FROM pg_database WHERE datname = '${dbConfig_user.database}';`
+            dbCheckStmt,{ database: dbConfig_user.database }
         );
         if (!dbCheck || dbCheck.length === 0) {
-            await ownerConn.execute(`
-                CREATE DATABASE ${dbConfig_user.database} OWNER ${dbConfig_user.user};
-            `);
+            const createDbStmt = await loadSql(createDatabaseQuery);
+            await ownerConn.execute(
+                createDbStmt, {
+                    user: dbConfig_user,
+                    database: dbConfig_user.database
+                }
+            );
             console.log(`DATABASE ${dbConfig_user.database} criado`);
 
         } else {
@@ -91,46 +97,37 @@ async function createSchemaAndPermissions() {
     // aguardar um pouco para garantir que o novo DB esteja disponível
     await sleep(500);
 
-    const ownerDbConn = await connectWithRetries({ ...dbConfig_owner, database: dbConfig_user.database });
+    const ownerDbConn = await connectWithRetries(
+        { ...dbConfig_owner, database: dbConfig_user.database }, 
+        PostgreSQL
+    );
+
     try {
         // criar role de permissão se não existir
+        const roleCheckStmt = await loadSql(checkRoleQuery);
         const roleCheck = await ownerDbConn.query(
-            'SELECT 1 FROM pg_roles WHERE rolname = ${user};',
-            { user: rolname }
+            roleCheckStmt, { rolname: rolname }
         );
         if (!roleCheck || roleCheck.length === 0) {
-            await ownerDbConn.execute(`CREATE ROLE ${rolname} NOLOGIN;`);
+            const createRoleStmt = await loadSql(createRoleQuery);
+            await ownerDbConn.execute(
+                createRoleStmt, { rolname: rolname }
+            );
             console.log(`ROLE ${rolname} criado`);
         } else {
             console.log(`ROLE ${rolname} já existe`);
         }
         
         // permissões e defaults
-        await ownerDbConn.execute(`
-            GRANT CREATE ON SCHEMA public TO ${rolname};
-            GRANT SELECT ON ALL TABLES IN SCHEMA public TO ${rolname};
-            GRANT INSERT ON ALL TABLES IN SCHEMA public TO ${rolname};
-            GRANT UPDATE ON ALL TABLES IN SCHEMA public TO ${rolname};
-            GRANT DELETE ON ALL TABLES IN SCHEMA public TO ${rolname};
-
-            GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO ${rolname};
-
-            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO ${rolname};
-            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT INSERT ON TABLES TO ${rolname};
-            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT UPDATE ON TABLES TO ${rolname};
-            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT DELETE ON TABLES TO ${rolname};
-            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO ${rolname};
-
-            GRANT ${rolname} TO ${dbConfig_user.user};
-        `);
+        const permissionsStmt = await loadSql(permissionsQuery);
+        await ownerDbConn.execute(permissionsStmt, {
+                rolname: rolname,
+                user: dbConfig_user.user
+            });
 
         // criar tabela se não existir
-        await ownerDbConn.execute(`
-            CREATE TABLE IF NOT EXISTS public.users (
-                id   SERIAL PRIMARY KEY,
-                name TEXT NOT NULL
-            );
-        `);
+        const createUserTableStmt = await loadSql(createUserTableQuery);
+        await ownerDbConn.execute(createUserTableStmt);
         console.log('Schema e permissões asseguradas em barotrader_db');
 
     } catch (err) {
@@ -144,18 +141,21 @@ async function createSchemaAndPermissions() {
 
 async function runAsUser() {
     console.log('Running operations as db_user_barotrader_dev...');
-    const userConn = await connectWithRetries(dbConfig_user);
+    const userConn = await connectWithRetries(
+        dbConfig_user, PostgreSQL
+    );
+
     try {
+        const insertStmt = await loadSql(insertUserQuery);
         await userConn.execute(
-            'INSERT INTO users (name) VALUES (${name});',
-            { name: 'Teste' }
+            insertStmt, { name: 'Teste' }
         );
         
         console.log('INSERT executado como db_user_barotrader_dev');
         
+        const selectStmt = await loadSql(selectUserTableQuery);
         const rows = await userConn.query(
-            'SELECT id, name FROM users WHERE id = ${id};',
-            { id: 1 }
+            selectStmt, { id: 1 }
         );
 
         console.log('SELECT retornou:', rows);
@@ -171,11 +171,29 @@ async function runAsUser() {
 
 async function cleanup() {
     console.log('Cleaning up: dropping database and roles...');
-    const ownerConn = await connectWithRetries(dbConfig_owner);
+    const ownerConn = await connectWithRetries(
+        dbConfig_owner, PostgreSQL
+    );
+    
     try {
-        await ownerConn.execute(`DROP DATABASE IF EXISTS ${dbConfig_user.database};`);
-        await ownerConn.execute(`DROP USER IF EXISTS ${dbConfig_user.user};`);
-        await ownerConn.execute(`DROP ROLE IF EXISTS ${rolname};`);
+        const cleanDbStmt = await loadSql(cleanDbQuery);
+        await ownerConn.execute(cleanDbStmt, {
+            database: dbConfig_user.database,
+        });
+        console.log(`Database ${dbConfig_user.database} dropped.`);
+
+        const cleanDbUserStmt = await loadSql(cleanDbUserQuery);
+        await ownerConn.execute(cleanDbUserStmt, {
+            user: dbConfig_user.user
+        });
+        console.log(`User ${dbConfig_user.user} dropped.`);
+        
+        const cleanDbRoleStmt = await loadSql(cleanDbRoleQuery);
+        await ownerConn.execute(cleanDbRoleStmt, {
+            rolname: rolname
+        });
+        console.log(`Role ${rolname} dropped.`);
+
         console.log('Cleanup completed: database and roles dropped.');
 
     } catch (err) {
@@ -187,7 +205,7 @@ async function cleanup() {
     }
 }
 
-const way = true;
+const way = false;
 
 if (way) {
     await setupDatabase();
