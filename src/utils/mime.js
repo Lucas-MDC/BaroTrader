@@ -14,4 +14,4 @@ function contentTypeFor(ext) {
   return MAP[ext.toLowerCase()] || 'application/octet-stream';
 }
 
-module.exports = { contentTypeFor };
+export { contentTypeFor };
