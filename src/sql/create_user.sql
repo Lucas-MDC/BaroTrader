@@ -1,0 +1,1 @@
+CREATE ROLE ${user:name} LOGIN PASSWORD ${password};

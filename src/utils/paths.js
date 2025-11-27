@@ -1,6 +1,6 @@
-const fs = require('node:fs');
-const path = require('node:path');
-const { URL } = require('node:url');
+import fs from 'node:fs';
+import path from 'node:path';
+import { URL } from 'node:url';
 
 function safeJoin(baseDir, requestPath) {
   const full = path.normalize(path.join(baseDir, requestPath));
@@ -13,7 +13,7 @@ function resolveRequestPath(reqUrl, routes, projectRoot) {
   // 1) parse robusto da URL
   const { pathname } = new URL(reqUrl, 'http://localhost');
 
-  // 2) aplica roteamento “bonito”
+  // 2) aplica roteamento "bonito"
   const mapped = routes[pathname] || pathname;
 
   // se o mapeamento começar com '/' (p.ex. quando vem direto do pathname),
@@ -32,9 +32,9 @@ function resolveRequestPath(reqUrl, routes, projectRoot) {
       const idx = path.join(candidate, 'index.html');
       if (fs.existsSync(idx)) return idx;
     }
-  } catch (_) { /* ignora e segue */ }
+  } catch { /* ignora e segue */ }
 
   return candidate;
 }
 
-module.exports = { safeJoin, resolveRequestPath };
+export { safeJoin, resolveRequestPath };
