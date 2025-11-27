@@ -1,12 +1,18 @@
 {
   "name": "barotrader",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "BaroTrader application",
+  "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "test_dev": "node --watch src\\index.js"
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "db:setup": "node src/utils/database_postgresql.js setup",
+    "db:cleanup": "node src/utils/database_postgresql.js cleanup",
+    "db:test": "node src/utils/database_postgresql.js test",
+    "db:test-sqlite": "node src/utils/database_sqlite.js"
   },
   "repository": {
     "type": "git",

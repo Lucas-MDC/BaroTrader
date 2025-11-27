@@ -71,7 +71,7 @@ async function setupBasePermissions() {
         throw err;
 
     } finally {
-        await ownerConn.close();
+        if (ownerConn) await ownerConn.close();
     }
 }
 
@@ -110,7 +110,7 @@ async function setupDatabase() {
         throw err;
 
     } finally {
-        await ownerConn.close();
+        if (ownerConn) await ownerConn.close();
     }
 }
 
@@ -149,7 +149,7 @@ async function createSchema() {
         throw err;
 
     } finally {
-        await ownerDbConn.close();
+        if (ownerDbConn) await ownerDbConn.close();
     }
 }
 
@@ -182,7 +182,7 @@ async function buildPermissions() {
         throw err;
 
     } finally {
-        await ownerDbConn.close();
+        if (ownerDbConn) await ownerDbConn.close();
     }
 }
 
@@ -215,7 +215,7 @@ async function runAsUser() {
         console.error('Error running as user', err);
 
     } finally {
-        await userConn.close();
+        if (userConn) await userConn.close();
 
     }
 }
@@ -255,22 +255,49 @@ async function cleanup() {
         console.error('Error during cleanup', err);
 
     } finally {
-        await ownerConn.close();
+        if (ownerConn) await ownerConn.close();
     }
 }
 
-const way = false;
+// Parse command-line arguments to determine operation mode
+const args = process.argv.slice(2);
+const mode = args[0] || 'setup';
 
-if (way) {
-    await setupBasePermissions();
-    await setupDatabase();
-    await createSchema();
-    await buildPermissions();
-    await runAsUser();
-    
-} else { 
-    await cleanup();
-
+async function main() {
+    try {
+        switch (mode) {
+            case 'setup':
+                console.log('=== Setting up database ===');
+                await setupBasePermissions();
+                await setupDatabase();
+                await createSchema();
+                await buildPermissions();
+                await runAsUser();
+                console.log('=== Database setup complete ===');
+                break;
+            case 'cleanup':
+                console.log('=== Cleaning up database ===');
+                await cleanup();
+                console.log('=== Database cleanup complete ===');
+                break;
+            case 'test':
+                console.log('=== Testing database operations ===');
+                await runAsUser();
+                console.log('=== Database test complete ===');
+                break;
+            default:
+                console.log('Usage: node database_postgresql.js [setup|cleanup|test]');
+                console.log('  setup   - Create database, user, roles and schema (default)');
+                console.log('  cleanup - Drop database, user and roles');
+                console.log('  test    - Test read/write operations as application user');
+                process.exit(1);
+        }
+    } catch (error) {
+        console.error('Error during database operation:', error.message);
+        process.exit(1);
+    }
 }
+
+main();
 
 
