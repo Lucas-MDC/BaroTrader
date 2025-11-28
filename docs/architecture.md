@@ -37,7 +37,7 @@ flowchart LR
     
         subgraph Settings_Area
             settings["Settings"]
-            user_perfil["Data"]
+            user_profile["Data"]
             auth["Authentication"]
         end
     
@@ -59,7 +59,7 @@ flowchart LR
     market --- orders:::suggest
     market --- stocks
 
-    settings --- user_perfil
+    settings --- user_profile
     settings --- auth
     
     end
