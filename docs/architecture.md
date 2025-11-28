@@ -18,7 +18,7 @@ flowchart LR
 
         subgraph Home_Area
             home["Home"]
-            content["Conteúdo da Home"]
+            content["Home Content"]
         end
 
         subgraph Wallet_Area
