@@ -7,8 +7,7 @@ const cache = new Map();
 export async function loadSql(name) {
     if (cache.has(name)) return cache.get(name);
     const baseDir = path.dirname(fileURLToPath(import.meta.url));
-    const p = path.join(baseDir, '..', 'sql', name
-    );
+    const p = path.join(baseDir, '..', 'sql', name);
     
     const sql = await fs.readFile(p, 'utf8');
     cache.set(name, sql);
@@ -28,7 +27,10 @@ export async function connectWithRetries(
 
         } catch (err) {
             if (i === retries - 1) throw err;
-            console.warn(`Connection attempt ${i + 1} failed. Retrying in ${baseDelay * (2 ** i)} ms...`);
+            console.warn(
+                `Connection attempt ${i + 1} failed. ` +
+                `Retrying in ${baseDelay * (2 ** i)} ms...`
+            );
             await sleep(baseDelay * (2 ** i));
 
         }
