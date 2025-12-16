@@ -1,6 +1,6 @@
-const registerButton = document.querySelector('#register-button');
+const registerButton = window.document.querySelector('#register-button');
 
 registerButton?.addEventListener('click', (event) => {
   event.preventDefault();
-  window.location.href = '/app/pages/homeInternal.html';
+  window.location.href = '/private/static/pages/homeInternal.html';
 });

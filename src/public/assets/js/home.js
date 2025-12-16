@@ -4,5 +4,5 @@ console.log('home.js carregado');
 
 loginButton?.addEventListener('click', (event) => {
   event.preventDefault();
-  window.location.href = '/app/pages/homeInternal.html';
+  window.location.href = '/private/static/pages/homeInternal.html';
 });
