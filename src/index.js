@@ -19,12 +19,12 @@ const SHARED_DIR = path.join(SRC_ROOT, 'shared');
 app.use('/static/shared', express.static(SHARED_DIR));
 
 // Publico: apenas assets e paginas publicas
-app.use('/static/assets', express.static(PUBLIC_ASSETS_DIR));
-app.use('/static/pages', express.static(PUBLIC_PAGES_DIR));
+app.use('/public/static/assets', express.static(PUBLIC_ASSETS_DIR));
+app.use('/public/static/pages', express.static(PUBLIC_PAGES_DIR));
 
 // Privado: proteger futuramente com requireAuth
-app.use('/app/pages', express.static(PRIVATE_PAGES_DIR));
-app.use('/app/assets', express.static(PRIVATE_ASSETS_DIR));
+app.use('/private/static/assets', express.static(PRIVATE_ASSETS_DIR));
+app.use('/private/static/pages', express.static(PRIVATE_PAGES_DIR));
 
 // Entrypoint: pagina inicial publica
 app.get('/', (req, res) => {

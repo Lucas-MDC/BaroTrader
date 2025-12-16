@@ -1,4 +1,4 @@
-const logoutButton = document.querySelector('#logout-button');
+const logoutButton = window.document.querySelector('#logout-button');
 
 logoutButton?.addEventListener('click', (event) => {
   event.preventDefault();
