@@ -33,7 +33,7 @@ async function applyBasePermissions() {
         }
     );
 
-    console.log('Permissoes asseguradas em barotrader_db');
+    console.log('Permissions ensured in barotrader_db');
 }
 
 export {

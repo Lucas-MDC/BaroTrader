@@ -7,7 +7,7 @@ async function ensureDatabaseEntities() {
     const userModel = createUserModel(ownerDb);
     await userModel.ensureTable();
 
-    console.log('Entidades do banco asseguradas');
+    console.log('Database entities ensured');
 }
 
 export {
