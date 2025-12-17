@@ -11,7 +11,7 @@ async function ensureBaseRole() {
     );
 
     if (roleCheck && roleCheck.length > 0) {
-        console.log(`ROLE ${baseRole} ja existe`);
+        console.log(`ROLE ${baseRole} already exists`);
         return;
     }
 
@@ -19,7 +19,7 @@ async function ensureBaseRole() {
         sql.infra.roles.create,
         { rolname: baseRole }
     );
-    console.log(`ROLE ${baseRole} criado`);
+    console.log(`ROLE ${baseRole} created`);
 }
 
 async function applyBasePermissions() {
