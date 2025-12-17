@@ -44,6 +44,7 @@ async function fullFlow() {
     await setupFlow();
     await sleep(500);
     await databaseEntitiesFlow();
+    await sleep(500);
     await permissionsFlow();
     await seedFlow();
     console.log('=== Full database provisioning complete ===');
@@ -62,7 +63,6 @@ async function main() {
                 await setupFlow();
                 break;
             case 'schema':
-            case 'entities':
                 await databaseEntitiesFlow();
                 break;
             case 'permissions':
@@ -79,7 +79,7 @@ async function main() {
                 await cleanupFlow();
                 break;
             default:
-                console.log('Usage: node main.js [setup|permissions|seed|cleanup|full|test]');
+                console.log('Usage: node main.js [setup|schema|permissions|seed|cleanup|full|test]');
                 console.log('  setup        - Create database user and database (default)');
                 console.log('  schema       - Create database entities (tables)');
                 console.log('  permissions  - Create base role and apply grants');
