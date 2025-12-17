@@ -10,9 +10,10 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "db:setup": "node src/infra/db/main.js setup",
+    "db:schema": "node src/infra/db/main.js schema",
     "db:permissions": "node src/infra/db/main.js permissions",
     "db:seed": "node src/infra/db/main.js seed",
-    "db:full": "npm run db:setup && npm run db:permissions && npm run db:seed",
+    "db:full": "npm run db:setup && npm run db:schema && npm run db:permissions && npm run db:seed",
     "db:cleanup": "node src/infra/db/main.js cleanup",
     "db:test": "node src/infra/db/main.js seed",
     "db:test-sqlite": "node src/utils/database_sqlite.js"

@@ -5,6 +5,7 @@ import { closeAll } from './pool.js';
 import { cleanup } from './setup/cleanup.js';
 import { ensureDatabase, ensureDatabaseUser } from './setup/database.js';
 import { applyBasePermissions, ensureBaseRole } from './permissions/permissions.js';
+import { ensureDatabaseEntities } from './schema/entities.js';
 import { runAsUser } from './seed/runAs.js';
 import { sleep } from '../../utils/database_utils.js';
 
@@ -17,6 +18,12 @@ async function setupFlow() {
     await ensureDatabaseUser();
     await ensureDatabase();
     console.log('=== Database infrastructure ready ===');
+}
+
+async function databaseEntitiesFlow() {
+    console.log('=== Creating database entities ===');
+    await ensureDatabaseEntities();
+    console.log('=== Database entities ready ===');
 }
 
 async function permissionsFlow() {
@@ -36,6 +43,7 @@ async function fullFlow() {
     console.log('=== Running full database provisioning ===');
     await setupFlow();
     await sleep(500);
+    await databaseEntitiesFlow();
     await permissionsFlow();
     await seedFlow();
     console.log('=== Full database provisioning complete ===');
@@ -53,6 +61,10 @@ async function main() {
             case 'setup':
                 await setupFlow();
                 break;
+            case 'schema':
+            case 'entities':
+                await databaseEntitiesFlow();
+                break;
             case 'permissions':
                 await permissionsFlow();
                 break;
@@ -69,11 +81,12 @@ async function main() {
             default:
                 console.log('Usage: node main.js [setup|permissions|seed|cleanup|full|test]');
                 console.log('  setup        - Create database user and database (default)');
-                console.log('  permissions  - Create base role and apply grants/schema');
+                console.log('  schema       - Create database entities (tables)');
+                console.log('  permissions  - Create base role and apply grants');
                 console.log('  seed         - Seed/smoke test as application user');
                 console.log('  test         - Alias for seed');
                 console.log('  cleanup      - Drop database, user and base role');
-                console.log('  full         - Run setup + permissions + seed');
+                console.log('  full         - Run setup + schema + permissions + seed');
                 process.exit(1);
         }
     } catch (error) {

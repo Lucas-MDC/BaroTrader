@@ -32,10 +32,11 @@ Edit the `.env` file with your PostgreSQL credentials.
 | `npm run lint` | Run ESLint to check code quality |
 | `npm run lint:fix` | Run ESLint and fix auto-fixable issues |
 | `npm run db:setup` | Provision the PostgreSQL user and application database |
-| `npm run db:permissions` | Create the base role, grants, and ensure schema/tables |
+| `npm run db:schema` | Create/ensure database entities (tables) |
+| `npm run db:permissions` | Create the base role and apply grants |
 | `npm run db:seed` | Run a smoke test/seed as the application user |
 | `npm run db:test` | Alias for `npm run db:seed` |
-| `npm run db:full` | Run setup + permissions + seed in sequence |
+| `npm run db:full` | Run setup + schema + permissions + seed in sequence |
 | `npm run db:cleanup` | Clean up (drop) the database, user and roles |
 | `npm run db:test-sqlite` | Test SQLite database operations |
 
@@ -51,13 +52,14 @@ The project includes scripts to set up and test database connectivity.
 
 ```bash
 npm run db:setup
+npm run db:schema
 npm run db:permissions
 ```
 
 This sequence will:
 - Create the application user and database
-- Create the base role and grants
 - Create/ensure the initial schema (users table)
+- Create the base role and grants
 
 Optionally run the smoke test/seed:
 
@@ -88,10 +90,11 @@ src/
   index.js                 # Express server entry point
   config/db.js             # Centralized DB config (env)
   infra/db/                # Database setup + pooled connections
-    main.js                # Entry point for DB setup/permissions/seed/cleanup
+    main.js                # Entry point for DB setup/schema/permissions/seed/cleanup
     pool.js                # Shared pg-promise pool (user/admin/owner)
     setup/                 # User/database provisioning and cleanup
-    permissions/           # Base role creation and grants/schema
+    schema/                # Creation of database entities (DDL)
+    permissions/           # Base role creation and grants
     seed/                  # Smoke test/seed routines as app user
   models/                  # Domain models (repositories)
     user/

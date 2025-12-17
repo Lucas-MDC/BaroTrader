@@ -1,7 +1,6 @@
 import { baseRole, dbConfigUser } from '../../../config/db.js';
 import sql from '../../../sql/index.js';
 import { ownerDb } from '../pool.js';
-import { createUserModel } from '../../../models/user/userModel.js';
 
 async function ensureBaseRole() {
     console.log('||| Ensuring base role exists... |||');
@@ -24,7 +23,7 @@ async function ensureBaseRole() {
 }
 
 async function applyBasePermissions() {
-    console.log('||| Applying base permissions and schema... |||');
+    console.log('||| Applying base permissions... |||');
 
     await ownerDb.execute(
         sql.infra.roles.grantPermissions,
@@ -34,9 +33,7 @@ async function applyBasePermissions() {
         }
     );
 
-    const userModel = createUserModel(ownerDb);
-    await userModel.ensureTable();
-    console.log('Schema e permissoes asseguradas em barotrader_db');
+    console.log('Permissoes asseguradas em barotrader_db');
 }
 
 export {
