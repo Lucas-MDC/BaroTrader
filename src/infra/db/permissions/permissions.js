@@ -1,7 +1,6 @@
 import { baseRole, dbConfigUser } from '../../../config/db.js';
 import sql from '../../../sql/index.js';
 import { ownerDb } from '../pool.js';
-import { createUserModel } from '../../../models/user/userModel.js';
 
 async function ensureBaseRole() {
     console.log('||| Ensuring base role exists... |||');
@@ -12,7 +11,7 @@ async function ensureBaseRole() {
     );
 
     if (roleCheck && roleCheck.length > 0) {
-        console.log(`ROLE ${baseRole} ja existe`);
+        console.log(`ROLE ${baseRole} already exists`);
         return;
     }
 
@@ -20,11 +19,11 @@ async function ensureBaseRole() {
         sql.infra.roles.create,
         { rolname: baseRole }
     );
-    console.log(`ROLE ${baseRole} criado`);
+    console.log(`ROLE ${baseRole} created`);
 }
 
 async function applyBasePermissions() {
-    console.log('||| Applying base permissions and schema... |||');
+    console.log('||| Applying base permissions... |||');
 
     await ownerDb.execute(
         sql.infra.roles.grantPermissions,
@@ -34,9 +33,7 @@ async function applyBasePermissions() {
         }
     );
 
-    const userModel = createUserModel(ownerDb);
-    await userModel.ensureTable();
-    console.log('Schema e permissoes asseguradas em barotrader_db');
+    console.log('Permissions ensured in barotrader_db');
 }
 
 export {

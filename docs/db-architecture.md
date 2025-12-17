@@ -17,16 +17,18 @@
 - Each pool exposes `query` (selects), `execute` (DDL/DML with `result`), and `close` (only that pool).
 
 ## Setup flow (CLI)
-- Entry: `infra/db/main.js` (scripts `db:setup`, `db:permissions`, `db:seed`/`db:test`, `db:full`, `db:cleanup`).
+- Entry: `infra/db/main.js` (scripts `db:setup`, `db:schema`, `db:permissions`, `db:seed`/`db:test`, `db:full`, `db:cleanup`).
 - Setup (infra only):
   1. `ensureDatabaseUser` (`setup/database.js`): creates the DB user if missing (adminDb).
   2. `ensureDatabase` (`setup/database.js`): creates the application database if missing (adminDb).
+- Schema/entities:
+  1. `ensureDatabaseEntities` (`schema/entities.js`): ensures business entities (currently the users table) using `ownerDb`.
 - Permissions:
   1. `ensureBaseRole` (`permissions/permissions.js`): creates the base role if missing (ownerDb).
-  2. `applyBasePermissions` (`permissions/permissions.js`): applies grants and ensures the users table via `userModel.ensureTable()` (ownerDb).
+  2. `applyBasePermissions` (`permissions/permissions.js`): applies grants for the base role/user (ownerDb).
 - Seed/Test: `runAsUser` (`seed/runAs.js`): smoke test using the application user (`db`).
 - Cleanup: `setup/cleanup.js` drops database, user, and role (order: drop DB -> drop user -> drop role).
-- `db:full`: runs setup -> permissions -> seed in sequence (keeps a small wait between setup and permissions to let the DB come up).
+- `db:full`: runs setup -> schema -> permissions -> seed in sequence (keeps a small wait between setup and permissions to let the DB come up).
 
 ## SQL layout
 - `sql/index.js` centralizes paths via `QueryFile` (cache/minify):
