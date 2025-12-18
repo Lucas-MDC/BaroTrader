@@ -1,3 +1,9 @@
+/*
+This file demonstrates how to use the SQLite database wrapper.
+It shows how to create a table, insert data, and query data 
+using named parameters.
+*/
+
 import { SQLite } from "./databaseWrappers/sqlite_wrapper.js";
 
 const db = await SQLite('./bins/db.sqlite');

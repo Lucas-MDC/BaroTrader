@@ -1,3 +1,10 @@
+
+/*
+This module serves as the main entry point for managing database setup,
+schema creation, permissions application, seeding, and cleanup operations.
+It interprets command-line arguments to determine which operation to perform.
+*/
+
 import path from 'path';
 import process from 'process';
 import { fileURLToPath } from 'url';
@@ -14,6 +21,12 @@ const mode = args[0] || 'setup';
 const thisFile = fileURLToPath(import.meta.url);
 
 async function setupFlow() {
+
+    /*
+    This function sets up the database infrastructure by ensuring that
+    the necessary database user and database exist.
+    */
+
     console.log('=== Setting up database infrastructure ===');
     await ensureDatabaseUser();
     await ensureDatabase();
@@ -21,12 +34,24 @@ async function setupFlow() {
 }
 
 async function databaseEntitiesFlow() {
+
+    /*
+    This function creates the necessary database entities (tables, etc.)
+    required for the application to function.
+    */
+
     console.log('=== Creating database entities ===');
     await ensureDatabaseEntities();
     console.log('=== Database entities ready ===');
 }
 
 async function permissionsFlow() {
+
+    /*
+    This function applies the base permissions by ensuring the base role
+    exists and applying the necessary grants.
+    */
+
     console.log('=== Applying base permissions ===');
     await ensureBaseRole();
     await applyBasePermissions();
@@ -34,12 +59,24 @@ async function permissionsFlow() {
 }
 
 async function seedFlow() {
+
+    /*
+    This function seeds the database and performs smoke testing
+    as the application user.
+    */
+
     console.log('=== Seeding / smoke testing as application user ===');
     await runAsUser();
     console.log('=== Seed/test run as application user complete ===');
 }
 
 async function fullFlow() {
+
+    /*
+    This function runs the full database provisioning process,
+    including setup, schema creation, permissions application, and seeding.
+    */
+
     console.log('=== Running full database provisioning ===');
     await setupFlow();
     await sleep(500);
@@ -51,6 +88,12 @@ async function fullFlow() {
 }
 
 async function cleanupFlow() {
+
+    /*
+    This function cleans up the database by dropping the database,
+    user, and base role.
+    */
+
     console.log('=== Cleaning up database ===');
     await cleanup();
     console.log('=== Database cleanup complete ===');

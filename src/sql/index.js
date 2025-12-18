@@ -1,3 +1,12 @@
+
+/*
+This module organizes and exports SQL query files
+using pg-promise's QueryFile feature. It provides a
+structured way to access SQL scripts for different
+parts of the application, such as infrastructure setup
+and user operations.
+*/
+
 import { fileURLToPath } from 'url';
 import pkg from 'pg-promise';
 import path from 'path';

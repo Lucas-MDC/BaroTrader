@@ -1,9 +1,20 @@
+/*
+Helpers that provision the foundational pieces of the database layer:
+the login the app uses and the database instance owned by that login.
+*/
+
 import { dbConfigUser } from '../../../config/db.js';
 import sql from '../../../sql/index.js';
 import { adminDb } from '../pool.js';
 
 async function ensureDatabaseUser() {
-    console.log('||| Ensuring database user exists... |||');
+
+    /*
+    Ensure the application login exists inside the DBMS so we can later
+    grant permissions and connect as that user.
+    */
+
+    console.log('||| [Setup] Step 1 - Ensuring application login exists |||');
 
     const roleCheck = await adminDb.query(
         sql.infra.users.checkExists,
@@ -11,7 +22,7 @@ async function ensureDatabaseUser() {
     );
 
     if (roleCheck && roleCheck.length > 0) {
-        console.log(`ROLE ${dbConfigUser.user} ja existe`);
+        console.log(`USER ${dbConfigUser.user} already exists`);
         return;
     }
 
@@ -19,11 +30,17 @@ async function ensureDatabaseUser() {
         sql.infra.users.create,
         { user: dbConfigUser.user, password: dbConfigUser.password }
     );
-    console.log(`ROLE ${dbConfigUser.user} criado`);
+    console.log(`USER ${dbConfigUser.user} created`);
 }
 
 async function ensureDatabase() {
-    console.log('||| Ensuring application database exists... |||');
+
+    /*
+    Ensure the application database exists, owned by the login created
+    previously so subsequent provisioning can run inside it.
+    */
+
+    console.log('||| [Setup] Step 2 - Ensuring application database exists |||');
 
     const dbCheck = await adminDb.query(
         sql.infra.database.checkExists,
@@ -31,7 +48,7 @@ async function ensureDatabase() {
     );
 
     if (dbCheck && dbCheck.length > 0) {
-        console.log(`DATABASE ${dbConfigUser.database} ja existe`);
+        console.log(`DATABASE ${dbConfigUser.database} already exists`);
         return;
     }
 
@@ -42,7 +59,7 @@ async function ensureDatabase() {
             database: dbConfigUser.database
         }
     );
-    console.log(`DATABASE ${dbConfigUser.database} criado`);
+    console.log(`DATABASE ${dbConfigUser.database} created`);
 }
 
 export {

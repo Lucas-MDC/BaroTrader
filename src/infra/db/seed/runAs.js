@@ -1,7 +1,16 @@
+/*
+This module is responsible for running seed and smoke test
+*/
+
 import { db } from '../pool.js';
 import { createUserModel } from '../../../models/user/userModel.js';
 
 async function runAsUser() {
+
+    /*
+    This function runs some operations as the application user.
+    */
+
     console.log('Running operations as application user...');
     
     const userModel = createUserModel(db);
