@@ -1,3 +1,9 @@
+/*
+This module provides utility functions for database operations,
+including loading SQL files with caching, implementing sleep 
+functionality, and connecting to a database with retry logic.
+*/
+
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -5,6 +11,16 @@ import { fileURLToPath } from 'url';
 const cache = new Map();
 
 export async function loadSql(name) {
+
+    /* 
+    Loads an SQL file from the 'sql' directory with caching.
+    
+    Args:
+        name (string): The name of the SQL file to load.
+    Returns:
+        string: The contents of the SQL file.
+    */
+
     if (cache.has(name)) return cache.get(name);
     const baseDir = path.dirname(fileURLToPath(import.meta.url));
     const p = path.join(baseDir, '..', 'sql', name);
@@ -14,11 +30,33 @@ export async function loadSql(name) {
     return sql;
 }
 
+/*
+Sleeps for a specified number of milliseconds.
+Args:
+    ms (number): Number of milliseconds to sleep.
+*/
 export function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 export async function connectWithRetries(
     config, dbDriver, retries = 3, baseDelay = 500
 ) {
+
+    /*
+    Tries to connect to a database with exponential backoff 
+    retry logic.
+    
+    Args:
+        config (object): Database connection configuration.
+        dbDriver (function): Function that attempts to connect 
+            to the database.
+        retries (number): Number of retry attempts.
+        baseDelay (number): Base delay in milliseconds for 
+            exponential backoff.
+    Returns:
+        object: Database connection object.
+
+    */
+
     for (let i = 0; i < retries; i++) {
         try {
             let p = await dbDriver(config);

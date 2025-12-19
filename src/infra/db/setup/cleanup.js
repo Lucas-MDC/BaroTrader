@@ -1,8 +1,18 @@
+/*
+This module handles the cleanup of the database setup by 
+dropping the created database, user, and role.
+*/
+
 import { baseRole, dbConfigUser } from '../../../config/db.js';
 import sql from '../../../sql/index.js';
 import { adminDb } from '../pool.js';
 
 async function cleanup() {
+
+    /* 
+    Drop the database, user, and role created during setup. 
+    */
+
     console.log('Cleaning up: dropping database and roles...');
 
     await adminDb.execute(

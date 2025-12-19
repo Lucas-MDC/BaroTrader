@@ -1,7 +1,6 @@
 const loginButton = document.querySelector('#login-button');
 
-console.log('home.js carregado');
-
+// navigation functionality
 loginButton?.addEventListener('click', (event) => {
   event.preventDefault();
   window.location.href = '/private/static/pages/homeInternal.html';
