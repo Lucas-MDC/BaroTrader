@@ -17,7 +17,7 @@
 - Each pool exposes `query` (selects), `execute` (DDL/DML with `result`), and `close` (only that pool).
 
 ## Setup flow (CLI)
-- Entry: `infra/db/main.js` (scripts `db:setup`, `db:schema`, `db:permissions`, `db:seed`/`db:test`, `db:full`, `db:cleanup`).
+- Entry: `infra/db/main.js` (scripts `db:setup`, `db:schema`, `db:permissions`, `db:build`, `db:seed`/`db:test`, `db:full`, `db:cleanup`).
 - Setup (infra only):
   1. `ensureDatabaseUser` (`setup/database.js`): creates the DB user if missing (adminDb).
   2. `ensureDatabase` (`setup/database.js`): creates the application database if missing (adminDb).
@@ -28,6 +28,7 @@
   2. `applyBasePermissions` (`permissions/permissions.js`): applies grants for the base role/user (ownerDb).
 - Seed/Test: `runAsUser` (`seed/runAs.js`): smoke test using the application user (`db`).
 - Cleanup: `setup/cleanup.js` drops database, user, and role (order: drop DB -> drop user -> drop role).
+- `db:build`: runs setup -> schema -> permissions in sequence (no seed).
 - `db:full`: runs setup -> schema -> permissions -> seed in sequence (keeps a small wait between setup and permissions to let the DB come up).
 
 ## SQL layout

@@ -34,6 +34,7 @@ Edit the `.env` file with your PostgreSQL credentials.
 | `npm run db:setup` | Provision the PostgreSQL user and application database |
 | `npm run db:schema` | Create/ensure database entities (tables) |
 | `npm run db:permissions` | Create the base role and apply grants |
+| `npm run db:build` | Run setup + schema + permissions in sequence (no seed) |
 | `npm run db:seed` | Run a smoke test/seed as the application user |
 | `npm run db:test` | Alias for `npm run db:seed` |
 | `npm run db:full` | Run setup + schema + permissions + seed in sequence |
@@ -60,6 +61,12 @@ This sequence will:
 - Create the application user and database
 - Create/ensure the initial schema (users table)
 - Create the base role and grants
+
+You can run the same sequence in one go:
+
+```bash
+npm run db:build
+```
 
 Optionally run the smoke test/seed:
 

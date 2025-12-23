@@ -19,9 +19,12 @@
     <main>
         <div class="container">
             <section id="register-area">
-                <input type="text" id="username-email" placeholder="Emain">
-                <input type="password" id="password-register" placeholder="Password">
-                <button id="register-button">Register</button>
+                <form id="register-form">
+                    <input type="text" id="username-email" name="username" placeholder="Email" autocomplete="username" required>
+                    <input type="password" id="password-register" name="password" placeholder="Password" autocomplete="new-password" required>
+                    <button type="submit" id="register-button">Register</button>
+                    <p id="register-feedback" aria-live="polite"></p>
+                </form>
             </section>
         </div>
     </main>
