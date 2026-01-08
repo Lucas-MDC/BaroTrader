@@ -1,4 +1,0 @@
-CREATE TABLE IF NOT EXISTS public.users (
-    id   SERIAL PRIMARY KEY,
-    name TEXT NOT NULL
-);

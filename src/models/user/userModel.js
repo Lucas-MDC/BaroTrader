@@ -6,7 +6,7 @@ It provides methods to create the table, insert new users,
 and retrieve users by username or ID.
 */
 
-import sql from '../../sql/index.js';
+import sql from '../../../sql/index.js';
 
 function mapUser(row) {
 
@@ -40,11 +40,13 @@ export function createUserModel(db) {
         This method ensures that the users table exists in 
         the database. If it does not exist, it creates the table.
 
-        And should be called during application initialization in
-        the setup phase. ("/src/infra/db/schema/entities.js")
+        Legacy path for creating the table in code. Prefer
+        applying schema changes via migrations.
         */
 
-        return db.execute(sql.user.createTable);
+        throw new Error(
+            'ensureTable is deprecated. Apply schema changes via migrations.'
+        );
     }
 
     async function createUser({ username, passwordHash }) {
@@ -58,7 +60,7 @@ export function createUserModel(db) {
             throw new Error('username and passwordHash are required');
         }
 
-        const rows = await db.query(sql.user.insert, {
+        const rows = await db.query(sql.runtime.user.insert, {
             username,
             password_hash: passwordHash
         });
@@ -74,7 +76,7 @@ export function createUserModel(db) {
         */
 
         if (!username) return null;
-        const rows = await db.query(sql.user.selectByUsername, { username });
+        const rows = await db.query(sql.runtime.user.selectByUsername, { username });
         return mapUser(rows[0]);
     }
 
@@ -86,7 +88,7 @@ export function createUserModel(db) {
         */
 
         if (!id) return null;
-        const rows = await db.query(sql.user.selectById, { id });
+        const rows = await db.query(sql.runtime.user.selectById, { id });
         return mapUser(rows[0]);
     }
 

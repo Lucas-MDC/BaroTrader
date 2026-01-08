@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { getHashConfig } from '../../config/security.js';
+import { getHashConfig } from '../../../config/index.js';
 
 export async function hashPassword(rawPassword = '') {
 
