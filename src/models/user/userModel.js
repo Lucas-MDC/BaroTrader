@@ -19,6 +19,7 @@ function mapUser(row) {
         id: row.id,
         username: row.username,
         passwordHash: row.password_hash,
+        passwordSalt: row.password_salt,
         createdAt: row.created_at
     };
 }
@@ -49,20 +50,21 @@ export function createUserModel(db) {
         );
     }
 
-    async function createUser({ username, passwordHash }) {
+    async function createUser({ username, passwordHash, passwordSalt }) {
 
         /*
         This method inserts a new user into the users table.
         It requires a username and a password hash.
         */
 
-        if (!username || !passwordHash) {
-            throw new Error('username and passwordHash are required');
+        if (!username || !passwordHash || !passwordSalt) {
+            throw new Error('username, passwordHash, and passwordSalt are required');
         }
 
         const rows = await db.query(sql.runtime.user.insert, {
             username,
-            password_hash: passwordHash
+            password_hash: passwordHash,
+            password_salt: passwordSalt
         });
 
         return mapUser(rows[0]);

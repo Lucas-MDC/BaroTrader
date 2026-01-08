@@ -20,8 +20,8 @@
         <div class="container">
             <section id="register-area">
                 <form id="register-form">
-                    <input type="text" id="username-email" name="username" placeholder="Email" autocomplete="username" required>
-                    <input type="password" id="password-register" name="password" placeholder="Password" autocomplete="new-password" required>
+                    <input type="text" id="username-email" name="username" placeholder="Email" autocomplete="username" required pattern="^[a-z0-9](?:[a-z0-9._-]{1,30}[a-z0-9])?$" minlength="1" maxlength="32" title="Use 1-32 caracteres: letras minusculas, numeros, ponto, sublinhado ou hifen.">
+                    <input type="password" id="password-register" name="password" placeholder="Password" autocomplete="new-password" required pattern="^(?=.*[A-Za-z])(?=.*\d)[\x21-\x7E]{8,64}$" minlength="8" maxlength="64" title="Minimo 8 caracteres com letra e numero.">
                     <button type="submit" id="register-button">Register</button>
                     <p id="register-feedback" aria-live="polite"></p>
                 </form>
