@@ -1,6 +1,13 @@
+/*
+Shared database configuration helpers for parsing URLs and defaults.
+*/
+
 import { loadEnv } from './env.js';
 
 export function parseDatabaseUrl(databaseUrl) {
+    /*
+    Parse a Postgres connection URL into a config object.
+    */
     if (!databaseUrl) return null;
 
     const parsed = new URL(databaseUrl);
@@ -16,6 +23,9 @@ export function parseDatabaseUrl(databaseUrl) {
 }
 
 export function buildDatabaseUrl({ host, port, database, user, password }) {
+    /*
+    Build a Postgres connection URL from a config object.
+    */
     if (!host || !port || !database || !user) return null;
 
     const encodedUser = encodeURIComponent(user);
@@ -27,6 +37,9 @@ export function buildDatabaseUrl({ host, port, database, user, password }) {
 }
 
 export function getBaseConnectionConfig() {
+    /*
+    Resolve the base connection settings shared across DB configs.
+    */
     loadEnv();
 
     return {
@@ -36,6 +49,9 @@ export function getBaseConnectionConfig() {
 }
 
 export function assertRequired(value, label) {
+    /*
+    Require a value and throw a labeled error when missing.
+    */
     if (!value) {
         throw new Error(`${label} is required.`);
     }

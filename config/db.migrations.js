@@ -1,3 +1,8 @@
+/*
+Migrations database configuration helpers.
+Resolves MIGRATIONS_DATABASE_URL or builds it from MIGRATION_* env vars.
+*/
+
 import { loadEnv } from './env.js';
 import {
     assertRequired,
@@ -7,6 +12,9 @@ import {
 } from './db.shared.js';
 
 function validateConfig(config, label) {
+    /*
+    Ensure the config has required fields and report missing values.
+    */
     if (!config) {
         throw new Error(`${label} is required.`);
     }
@@ -18,6 +26,9 @@ function validateConfig(config, label) {
 }
 
 export function getMigrationsDbConfig({ required = true } = {}) {
+    /*
+    Resolve the migrations DB config, optionally returning null when not required.
+    */
     loadEnv();
 
     const base = getBaseConnectionConfig();

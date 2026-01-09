@@ -1,7 +1,15 @@
+/*
+Admin database configuration helpers for setup/cleanup tooling.
+Builds connection settings from environment variables and exposes the base role name.
+*/
+
 import { loadEnv } from './env.js';
 import { assertRequired, getBaseConnectionConfig } from './db.shared.js';
 
 export function getAdminDbConfig() {
+    /*
+    Load env and build the admin connection config from BAROTRADER_DB_ADMIN_* values.
+    */
     loadEnv();
 
     const base = getBaseConnectionConfig();
@@ -24,6 +32,9 @@ export function getAdminDbConfig() {
 }
 
 export function getBaseRole() {
+    /*
+    Resolve the base role name used for database infrastructure setup.
+    */
     loadEnv();
     return process.env.DB_BASE_ROLE || 'base_role_op';
 }

@@ -1,3 +1,7 @@
+/*
+Environment loader that reads .env once and preserves admin overrides.
+*/
+
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
 import path from 'path';
@@ -11,6 +15,9 @@ const ADMIN_KEYS = [
 ];
 
 export function loadEnv() {
+    /*
+    Load .env (with variable expansion) a single time and keep admin env overrides.
+    */
     if (loaded) return;
 
     const __filename = fileURLToPath(import.meta.url);

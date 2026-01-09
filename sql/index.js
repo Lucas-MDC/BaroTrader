@@ -11,10 +11,15 @@ const { QueryFile } = pkg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const qf = (relativePath) => new QueryFile(
-    path.join(__dirname, relativePath),
-    { minify: true }
-);
+const qf = (relativePath) => {
+    /*
+    Create a pg-promise QueryFile from a path relative to this directory.
+    */
+    return new QueryFile(
+        path.join(__dirname, relativePath),
+        { minify: true }
+    );
+};
 
 const sql = {
     infra: {

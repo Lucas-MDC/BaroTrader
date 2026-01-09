@@ -26,6 +26,9 @@ const defaultMigrationsTable = 'pgmigrations';
 const defaultMigrationsSchema = 'public';
 
 function stripFlagWithValue(args, name) {
+    /*
+    Remove a flag and its value from an argument list.
+    */
     const cleaned = [];
 
     for (let i = 0; i < args.length; i += 1) {
@@ -44,6 +47,9 @@ function stripFlagWithValue(args, name) {
 }
 
 export async function runMigrations(direction = 'up', extraArgs = []) {
+    /*
+    Execute node-pg-migrate with sanitized arguments.
+    */
     if (!fs.existsSync(cliPath)) {
         throw new Error(
             'node-pg-migrate is not installed. Run: npm install --save-dev node-pg-migrate'
@@ -96,6 +102,9 @@ export async function runMigrations(direction = 'up', extraArgs = []) {
 }
 
 function getNumericPrefix(name) {
+    /*
+    Extract a numeric prefix from a migration filename for sorting.
+    */
     const prefix = name.split('_')[0];
     if (prefix && /^\d+$/.test(prefix)) {
         return Number(prefix);
@@ -104,6 +113,9 @@ function getNumericPrefix(name) {
 }
 
 function compareMigrationNames(a, b) {
+    /*
+    Compare migration filenames with numeric prefixes first, then lexicographically.
+    */
     const aNum = getNumericPrefix(a);
     const bNum = getNumericPrefix(b);
     if (aNum !== null && bNum !== null && aNum !== bNum) {
@@ -118,6 +130,9 @@ function compareMigrationNames(a, b) {
 }
 
 function listMigrationNames() {
+    /*
+    List migration names from the migrations directory in execution order.
+    */
     if (!fs.existsSync(migrationsDir)) {
         throw new Error(`Migrations directory not found: ${migrationsDir}`);
     }
@@ -131,6 +146,9 @@ function listMigrationNames() {
 }
 
 function formatRunOn(value) {
+    /*
+    Format a migration run_on value as an ISO string when possible.
+    */
     if (!value) return '';
     const date = value instanceof Date ? value : new Date(value);
     if (Number.isNaN(date.getTime())) {
@@ -140,6 +158,9 @@ function formatRunOn(value) {
 }
 
 async function fetchAppliedMigrations(db) {
+    /*
+    Fetch applied migrations from the pgmigrations table when present.
+    */
     const exists = await db.query(
         'SELECT table_name FROM information_schema.tables WHERE table_schema=$1 AND table_name=$2',
         [defaultMigrationsSchema, defaultMigrationsTable]
@@ -155,6 +176,9 @@ async function fetchAppliedMigrations(db) {
 }
 
 export async function printMigrationStatus() {
+    /*
+    Print a status report of applied and pending migrations.
+    */
     getMigrationsDbConfig();
 
     const db = getOwnerDb();

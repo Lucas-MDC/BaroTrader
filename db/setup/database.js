@@ -11,6 +11,9 @@ import sql from '../../sql/index.js';
 import { getAdminDb } from '../pool.js';
 
 function resolveDatabaseName() {
+    /*
+    Resolve the common database name shared by runtime and migrator configs.
+    */
     const runtimeConfig = getRuntimeDbConfig();
     const migratorConfig = getMigrationsDbConfig();
 
@@ -24,6 +27,9 @@ function resolveDatabaseName() {
 }
 
 function requireUserConfig(config, label) {
+    /*
+    Ensure a config object includes a user name before proceeding.
+    */
     if (!config || !config.user) {
         throw new Error(`${label} is missing a user name.`);
     }
@@ -33,8 +39,7 @@ function requireUserConfig(config, label) {
 
 async function ensureDatabaseUser() {
     /*
-    Ensure the application login exists inside the DBMS so we can later
-    grant permissions and connect as that user.
+    Ensure the application login exists so runtime connections can be created.
     */
 
     console.log('||| [Setup] Step 1 - Ensuring application login exists |||');

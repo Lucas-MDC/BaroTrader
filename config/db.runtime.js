@@ -1,3 +1,8 @@
+/*
+Runtime database configuration helpers.
+Resolves DATABASE_URL or builds it from DB_* env vars.
+*/
+
 import { loadEnv } from './env.js';
 import {
     assertRequired,
@@ -7,6 +12,9 @@ import {
 } from './db.shared.js';
 
 function validateConfig(config, label) {
+    /*
+    Ensure the config has required fields and report missing values.
+    */
     if (!config) {
         throw new Error(`${label} is required.`);
     }
@@ -18,6 +26,9 @@ function validateConfig(config, label) {
 }
 
 export function getRuntimeDbConfig() {
+    /*
+    Resolve the runtime DB config from environment variables.
+    */
     loadEnv();
 
     const base = getBaseConnectionConfig();

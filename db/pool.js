@@ -13,6 +13,9 @@ import {
 const pgp = pgPromise({ capSQL: true });
 
 function wrapConnection(conn) {
+    /*
+    Wrap a pg-promise connection with helper methods used by tooling.
+    */
     return {
         query: (sql, params = {}) => conn.any(sql, params),
         execute: (sql, params = {}) => conn.result(sql, params),
@@ -26,6 +29,9 @@ let runtimeDb;
 let ownerDb;
 
 function getAdminDb() {
+    /*
+    Lazily create and return an admin database connection.
+    */
     if (!adminDb) {
         adminDb = wrapConnection(pgp(getAdminDbConfig()));
     }
@@ -34,6 +40,9 @@ function getAdminDb() {
 }
 
 function getRuntimeDb() {
+    /*
+    Lazily create and return the runtime database connection.
+    */
     if (!runtimeDb) {
         runtimeDb = wrapConnection(pgp(getRuntimeDbConfig()));
     }
@@ -42,6 +51,9 @@ function getRuntimeDb() {
 }
 
 function getOwnerDb() {
+    /*
+    Lazily create and return the migrator/owner database connection.
+    */
     if (!ownerDb) {
         ownerDb = wrapConnection(pgp(getMigrationsDbConfig()));
     }
@@ -50,6 +62,9 @@ function getOwnerDb() {
 }
 
 const closeAll = async () => {
+    /*
+    Close all pg-promise pools safely.
+    */
     try {
         pgp.end();
     } catch (err) {

@@ -21,6 +21,9 @@ const modeArgs = args.slice(1);
 const thisFile = fileURLToPath(import.meta.url);
 
 function getNpmArgs(scriptName) {
+    /*
+    Extract arguments passed through npm to a given script name.
+    */
     const raw = process.env.npm_config_argv;
     if (!raw) return [];
 
@@ -39,6 +42,9 @@ function getNpmArgs(scriptName) {
 }
 
 function resolveMigrateArgs() {
+    /*
+    Resolve migration arguments from CLI input or npm passthrough.
+    */
     if (modeArgs.length > 0) return modeArgs;
 
     const npmArgs = getNpmArgs('db:migrate');
@@ -115,6 +121,9 @@ async function cleanupFlow() {
 }
 
 function printUsage() {
+    /*
+    Print CLI usage instructions for database tooling.
+    */
     console.log('Usage: node db/main.js [setup|migrate|seed|cleanup]');
     console.log('  setup               - Create database user and database');
     console.log('  migrate <cmd> [args] - Run migrations (up|down|redo|status)');
@@ -123,6 +132,9 @@ function printUsage() {
 }
 
 async function main() {
+    /*
+    Entry point for the database CLI workflow.
+    */
     try {
         switch (mode) {
             case 'setup':

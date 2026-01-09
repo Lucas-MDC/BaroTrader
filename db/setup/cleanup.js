@@ -14,6 +14,9 @@ import { getAdminDb } from '../pool.js';
 import { assertDestructiveAllowed } from '../safety.js';
 
 function resolveDatabaseName() {
+    /*
+    Resolve the single database name shared by runtime and migrator configs.
+    */
     const runtimeConfig = getRuntimeDbConfig();
     const migratorConfig = getMigrationsDbConfig({ required: false });
 

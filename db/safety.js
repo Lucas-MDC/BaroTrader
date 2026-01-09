@@ -1,8 +1,15 @@
+/*
+Guards for destructive database operations in non-production environments.
+*/
+
 import { loadEnv } from '../config/env.js';
 
 const ALLOWED_ENVS = new Set(['development', 'test']);
 
 export function assertDestructiveAllowed({ targetDatabase }) {
+    /*
+    Ensure destructive actions are explicitly allowed for the target database.
+    */
     loadEnv();
 
     if (!targetDatabase) {
