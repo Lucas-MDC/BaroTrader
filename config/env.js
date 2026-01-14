@@ -2,6 +2,7 @@
 Environment loader that reads .env once and preserves admin overrides.
 */
 
+import fs from 'fs';
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
 import path from 'path';
@@ -12,6 +13,15 @@ const ADMIN_KEYS = [
     'BAROTRADER_DB_ADMIN_DBNAME',
     'BAROTRADER_DB_ADMIN_USER',
     'BAROTRADER_DB_ADMIN_PASS'
+];
+const FILE_ENV_KEYS = [
+    'BAROTRADER_DB_ADMIN_PASS',
+    'DB_PASS',
+    'MIGRATION_PASS',
+    'DATABASE_URL',
+    'MIGRATIONS_DATABASE_URL',
+    'MIGRATION_DATABASE_URL',
+    'HASH_PEPPER'
 ];
 
 export function loadEnv() {
@@ -43,6 +53,25 @@ export function loadEnv() {
             process.env[key] = existingAdmin[key];
         } else {
             delete process.env[key];
+        }
+    });
+
+    FILE_ENV_KEYS.forEach((key) => {
+        if (process.env[key]) return;
+
+        const fileKey = `${key}_FILE`;
+        const filePath = process.env[fileKey];
+        if (!filePath) return;
+
+        try {
+            const contents = fs.readFileSync(filePath, 'utf8');
+            const value = contents.trim();
+            if (!value) {
+                throw new Error(`Secret file ${filePath} is empty for ${key}.`);
+            }
+            process.env[key] = value;
+        } catch (error) {
+            throw new Error(`Unable to read ${fileKey} at ${filePath}: ${error.message}`);
         }
     });
     loaded = true;

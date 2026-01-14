@@ -42,9 +42,12 @@ export function getBaseConnectionConfig() {
     */
     loadEnv();
 
+    const host = process.env.DB_HOST || process.env.HOST || 'localhost';
+    const portValue = process.env.DB_PORT || process.env.PGPORT || process.env.PORT;
+
     return {
-        host: process.env.HOST || 'localhost',
-        port: Number(process.env.PORT || 5432)
+        host,
+        port: Number(portValue || 5432)
     };
 }
 

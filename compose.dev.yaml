@@ -1,0 +1,49 @@
+services:
+  db:
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      DB_DBNAME: barotrader_db
+      DB_USER: barotrader_runtime
+      DB_PASS: barotrader_runtime_pass
+      MIGRATION_DB: barotrader_db
+      MIGRATION_USER: barotrader_migrator
+      MIGRATION_PASS: barotrader_migrator_pass
+    ports:
+      - "5432:5432"
+
+  migrate:
+    build:
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app
+      - app_node_modules:/app/node_modules
+    environment:
+      NODE_ENV: development
+      APP_ENV: development
+      APP_PORT: "3000"
+      HASH_PEPPER: dev_hash_pepper
+      DB_BASE_ROLE: base_role_op
+      DATABASE_URL: postgres://barotrader_runtime:barotrader_runtime_pass@db:5432/barotrader_db
+      MIGRATIONS_DATABASE_URL: postgres://barotrader_migrator:barotrader_migrator_pass@db:5432/barotrader_db
+      BAROTRADER_DB_ADMIN_DBNAME: postgres
+      BAROTRADER_DB_ADMIN_USER: postgres
+      BAROTRADER_DB_ADMIN_PASS: postgres
+    command: ["npm", "run", "db:migrate", "--", "up"]
+
+  app:
+    build:
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app
+      - app_node_modules:/app/node_modules
+    environment:
+      NODE_ENV: development
+      APP_ENV: development
+      APP_PORT: "3000"
+      HASH_PEPPER: dev_hash_pepper
+      DATABASE_URL: postgres://barotrader_runtime:barotrader_runtime_pass@db:5432/barotrader_db
+    ports:
+      - "3000:3000"
+    command: ["npm", "run", "dev"]

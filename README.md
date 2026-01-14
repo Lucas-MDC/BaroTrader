@@ -2,36 +2,60 @@
 
 BaroTrader application with Express.js and PostgreSQL database.
 
-## Prerequisites
+## Quickstart (Docker Compose DEV)
 
-- Node.js (v18+)
-- PostgreSQL (v14+) or Docker with PostgreSQL container
+Prerequisites:
+- Docker Desktop/Engine + Docker Compose v2
+- Node.js (v18+) to run npm scripts
 
-## Installation
-
-```bash
-npm install
-```
-
-## Configuration
-
-Copy the `.env.example` file to `.env` and configure the database connection:
+From a fresh clone:
 
 ```bash
-cp .env.example .env
+npm run dev:up
 ```
 
-Edit the `.env` file with your PostgreSQL credentials. Use:
-- `HOST`, `PORT`, `DB_*` for the runtime application user (DML only)
-- `MIGRATION_*` for the migrator user (DDL/DCL)
-- `HASH_*`, `DB_BASE_ROLE`, and destructive gate flags as needed
-- `APP_ENV`, `DB_ALLOW_DESTRUCTIVE`, `DB_DESTRUCTIVE_CONFIRM` for destructive gates
-- (Optional) derived URLs via dotenv-expand:
-  - `DATABASE_URL=postgres://${DB_USER}:${DB_PASS}@${HOST}:${PORT}/${DB_DBNAME}`
-  - `MIGRATIONS_DATABASE_URL=postgres://${MIGRATION_USER}:${MIGRATION_PASS}@${HOST}:${PORT}/${MIGRATION_DB}`
+Then open `http://localhost:3000` (or run `npm run dev:open`).
 
-Admin provisioning credentials (`BAROTRADER_DB_ADMIN_*`) must be injected via host/CI
-environment variables (not stored in `.env`).
+`dev:up` builds the image, starts Postgres, bootstraps users/db on first init,
+runs migrations, and starts the app. Use `npm run dev:up -- -d` for detached.
+
+### Daily commands
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev:up` | Build + start db/migrate/app (foreground) |
+| `npm run dev:down` | Stop the dev stack (keeps data) |
+| `npm run dev:reset` | Stop and remove volumes (fresh DB) |
+| `npm run dev:bootstrap` | Re-run DB bootstrap inside Docker |
+| `npm run dev:open` | Open `http://localhost:3000` |
+
+## Compose layout (DEV)
+
+- `db`: Postgres with a named `pgdata` volume and bootstrap scripts in `docker/postgres/init`.
+- `migrate`: one-shot job that runs `npm run db:migrate -- up`.
+- `app`: Express dev server (`npm run dev`) that waits on migrations.
+
+## Configuration & secrets
+
+- HTTP port uses `APP_PORT` (defaults to 3000).
+- DB config prefers `DATABASE_URL` / `MIGRATIONS_DATABASE_URL` with fallback to
+  `DB_*` / `MIGRATION_*` (`DB_HOST`/`DB_PORT` override `HOST`/`PORT`).
+- Supported `*_FILE` secrets: `DB_PASS`, `MIGRATION_PASS`,
+  `BAROTRADER_DB_ADMIN_PASS`, `DATABASE_URL`, `MIGRATIONS_DATABASE_URL`,
+  `MIGRATION_DATABASE_URL`, `HASH_PEPPER`.
+
+For local Postgres (no Docker), copy `.env.example` to `.env`, fill values, and
+export `BAROTRADER_DB_ADMIN_DBNAME`, `BAROTRADER_DB_ADMIN_USER`,
+`BAROTRADER_DB_ADMIN_PASS` in your shell when running `db:setup`/`db:cleanup`.
+
+## Production compose skeleton
+
+`compose.prod.yaml` is a structure-only template with required variables and no
+defaults. Use it as a base for prod orchestration or secret injection:
+
+```bash
+docker compose -f compose.yaml -f compose.prod.yaml up --build
+```
 
 ## Scripts
 
@@ -42,32 +66,26 @@ environment variables (not stored in `.env`).
 | `npm run lint` | Run ESLint to check code quality |
 | `npm run lint:fix` | Run ESLint and fix auto-fixable issues |
 | `npm run db:setup` | Provision the runtime/migrator users and application database |
+| `npm run db:bootstrap` | Run DB setup inside Docker (dev helper) |
 | `npm run db:migrate` | Run migrations (use `up`, `down`, `redo`, `status`) |
 | `npm run db:seed` | Run a smoke test/seed as the application user |
 | `npm run db:cleanup` | Clean up (drop) the database, user and roles (guarded) |
 | `npm run db:test-sqlite` | Test SQLite database operations |
 
-## Database Setup
+## Database Setup (manual)
 
-The project includes scripts to set up and test database connectivity.
-
-### PostgreSQL Setup
+For local Postgres without Docker:
 
 1. Ensure PostgreSQL is running
-2. Configure the `.env` file with your credentials
-3. Export `BAROTRADER_DB_ADMIN_DBNAME`, `BAROTRADER_DB_ADMIN_USER`, and `BAROTRADER_DB_ADMIN_PASS` in your shell
-4. Run the database setup scripts:
+2. Configure `.env`
+3. Export `BAROTRADER_DB_ADMIN_DBNAME`, `BAROTRADER_DB_ADMIN_USER`,
+   and `BAROTRADER_DB_ADMIN_PASS` in your shell
+4. Run:
 
 ```bash
 npm run db:setup
-npm run db:migrate up
+npm run db:migrate -- up
 ```
-
-This sequence will:
-- Create the runtime and migrator users and database
-- Apply schema migrations and grants (node-pg-migrate)
-
-Note: `db:setup` and `db:cleanup` require `BAROTRADER_DB_ADMIN_*` to be set in the host/CI environment.
 
 Optionally run the smoke test/seed:
 
@@ -130,8 +148,13 @@ docs/
   db-architecture.md       # DB setup, roles, pooling and SQL layout
   db-lifecycle.md          # DB lifecycle, safety gates, use cases
   migrations.md            # How to create/run/check migrations
+  devops.md                # Docker Compose/devops tutorial for bring-up
 ```
 
 ## License
 
 ISC
+
+## DevOps walkthrough
+
+Leitura focada em quem está começando com Docker Compose e quer entender a automação de um ambiente dev/devops moderno: veja `docs/devops.md`.

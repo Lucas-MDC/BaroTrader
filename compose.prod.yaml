@@ -1,0 +1,35 @@
+services:
+  db:
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB}
+      DB_DBNAME: ${DB_DBNAME:?Set DB_DBNAME}
+      DB_USER: ${DB_USER:?Set DB_USER}
+      DB_PASS: ${DB_PASS:?Set DB_PASS}
+      MIGRATION_DB: ${MIGRATION_DB:?Set MIGRATION_DB}
+      MIGRATION_USER: ${MIGRATION_USER:?Set MIGRATION_USER}
+      MIGRATION_PASS: ${MIGRATION_PASS:?Set MIGRATION_PASS}
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL}
+      MIGRATIONS_DATABASE_URL: ${MIGRATIONS_DATABASE_URL:?Set MIGRATIONS_DATABASE_URL}
+      DB_BASE_ROLE: ${DB_BASE_ROLE:?Set DB_BASE_ROLE}
+    command: ["npm", "run", "db:migrate", "--", "up"]
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL}
+      HASH_PEPPER: ${HASH_PEPPER:?Set HASH_PEPPER}
+      APP_ENV: ${APP_ENV:?Set APP_ENV}
+      APP_PORT: ${APP_PORT:?Set APP_PORT}
+    ports:
+      - "${APP_PORT:?Set APP_PORT}:3000"
+    command: ["npm", "start"]

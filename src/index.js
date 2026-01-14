@@ -2,7 +2,8 @@ import express from 'express';
 import routes from './routes.js';
 
 const app = express();
-const port = 3000;
+const resolvedPort = Number.parseInt(process.env.APP_PORT, 10);
+const port = Number.isFinite(resolvedPort) ? resolvedPort : 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
