@@ -24,6 +24,7 @@ runs migrations, and starts the app. Use `npm run dev:up -- -d` for detached.
 | Script | Description |
 |--------|-------------|
 | `npm run dev:up` | Build + start db/migrate/app (foreground) |
+| `npm run dev:up:bg` | Build + start the stack detached |
 | `npm run dev:down` | Stop the dev stack (keeps data) |
 | `npm run dev:reset` | Stop and remove volumes (fresh DB) |
 | `npm run dev:bootstrap` | Re-run DB bootstrap inside Docker |
@@ -70,7 +71,6 @@ docker compose -f compose.yaml -f compose.prod.yaml up --build
 | `npm run db:migrate` | Run migrations (use `up`, `down`, `redo`, `status`) |
 | `npm run db:seed` | Run a smoke test/seed as the application user |
 | `npm run db:cleanup` | Clean up (drop) the database, user and roles (guarded) |
-| `npm run db:test-sqlite` | Test SQLite database operations |
 
 ## Database Setup (manual)
 
@@ -100,14 +100,6 @@ create, run, and check migration state, see `docs/migrations.md`.
 
 For lifecycle guidance (setup, cleanup, branching, and safety gates), see
 `docs/db-lifecycle.md`.
-
-### SQLite (for development)
-
-For quick local testing without PostgreSQL, you can use SQLite:
-
-```bash
-npm run db:test-sqlite
-```
 
 ## Project Structure
 
@@ -139,11 +131,9 @@ src/
       index.js             # Public API for user model
       userModel.js         # User data access using runtime pool
   utils/
-    database_sqlite.js     # SQLite setup and operations
     database_utils.js      # Shared database utilities
     databaseWrappers/      # Database abstraction layers
       postgresql_wrapper.js
-      sqlite_wrapper.js
 docs/
   db-architecture.md       # DB setup, roles, pooling and SQL layout
   db-lifecycle.md          # DB lifecycle, safety gates, use cases

@@ -8,6 +8,7 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "dev:up": "node scripts/dev.js up",
+    "dev:up:bg": "node scripts/dev.js up -d",
     "dev:down": "node scripts/dev.js down",
     "dev:reset": "node scripts/dev.js reset",
     "dev:bootstrap": "node scripts/dev.js bootstrap",
@@ -18,8 +19,7 @@
     "db:setup": "node db/main.js setup",
     "db:migrate": "node db/main.js migrate",
     "db:seed": "node db/main.js seed",
-    "db:cleanup": "node db/main.js cleanup",
-    "db:test-sqlite": "node src/utils/database_sqlite.js"
+    "db:cleanup": "node db/main.js cleanup"
   },
   "repository": {
     "type": "git",

@@ -1,3 +1,7 @@
+/*
+Migration wrapper that manages base role permissions.
+*/
+
 const {
     escapeIdentifier,
     escapeLiteral,
@@ -5,6 +9,11 @@ const {
 } = require('../db/migration_sql.cjs');
 
 function resolveRuntimeUser() {
+
+    /*
+    Resolve the runtime user from environment configuration.
+    */
+
     if (process.env.DATABASE_URL) {
         const parsed = new URL(process.env.DATABASE_URL);
         if (parsed.username) {
@@ -20,6 +29,11 @@ function resolveRuntimeUser() {
 }
 
 function getReplacements() {
+
+    /*
+    Build the template replacements for the migration SQL.
+    */
+
     const baseRole = process.env.DB_BASE_ROLE || 'base_role_op';
     const runtimeUser = resolveRuntimeUser();
 
@@ -32,9 +46,19 @@ function getReplacements() {
 }
 
 exports.up = (pgm) => {
+
+    /*
+    Apply base role permission grants.
+    */
+
     pgm.sql(loadMigrationSql('003_base_role_permissions.sql', getReplacements()));
 };
 
 exports.down = (pgm) => {
+
+    /*
+    Roll back base role permission grants.
+    */
+
     pgm.sql(loadMigrationSql('003_base_role_permissions.down.sql', getReplacements()));
 };

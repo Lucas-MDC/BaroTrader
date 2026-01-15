@@ -64,7 +64,7 @@ O script `01_bootstrap_roles.sh` e idempotente: ele verifica se os roles ja exis
 
 - **Separacao de responsabilidades** (db/migrate/app) evita que o app execute migrations; essa mesma abordagem vale para pipelines de CI/CD.
 - **Volume nomeado `pgdata`** garante que os dados sobrevivem a `dev:down`; o Compose reusa o volume automaticamente.
-- **Scripts npm** (`dev:up`, `dev:down`, `dev:reset`, `dev:bootstrap`, `dev:open`) encapsulam o comando Compose para quem nao conhece a sintaxe.
+- **Scripts npm** (`dev:up`, `dev:up:bg`, `dev:down`, `dev:reset`, `dev:bootstrap`, `dev:open`) encapsulam o comando Compose para quem nao conhece a sintaxe.
 - **Documentacao tutorial**: este arquivo e o README agora explicam passo a passo e as decisoes de alto nivel.
 - **Fallbacks e checks**: defaults gentis em dev e erros explicitos no prod (via `${VAR:?}`) evitam surpresas.
 
@@ -93,6 +93,6 @@ O script `01_bootstrap_roles.sh` e idempotente: ele verifica se os roles ja exis
 
 - Veja o Compose como um playbook que descreve o que cada container faz.
 - Rode `docker compose ps` e `docker compose logs migrate` para monitorar o fluxo.
-- Use `npm run dev:up -- -d` para rodar em background e ainda assim aproveitar os scripts.
+- Use `npm run dev:up:bg` para subir em background, ou mantenha `npm run dev:up` se quiser os logs no terminal.
 - Apague o volume com `npm run dev:reset` quando quiser refazer tudo em branco.
 - Edite `docker/postgres/init/*` para personalizar o bootstrap; quando o volume ja existe, use `npm run dev:bootstrap` para reaplicar o setup.

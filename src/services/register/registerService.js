@@ -1,3 +1,7 @@
+/*
+Registration domain logic for creating users with validation and hashing.
+*/
+
 import { getRegisterConfig } from '../../../config/index.js';
 import { getUserModel } from '../../models/user/index.js';
 import { sleep } from '../../utils/database_utils.js';
@@ -5,6 +9,11 @@ import { createPasswordSalt, hashPassword } from './passwordService.js';
 
 class RegistrationError extends Error {
     constructor(message, statusCode = 400) {
+
+        /*
+        Build a typed error that carries an HTTP status code.
+        */
+
         super(message);
         this.name = 'RegistrationError';
         this.statusCode = statusCode;
@@ -12,10 +21,20 @@ class RegistrationError extends Error {
 }
 
 function sanitizeUsername(username) {
+
+    /*
+    Normalize a raw username into a trimmed string.
+    */
+
     return typeof username === 'string' ? username.trim() : '';
 }
 
 function isValidUsername(username, config) {
+
+    /*
+    Validate username length and pattern constraints.
+    */
+
     if (!username) return false;
     if (username.length < config.usernameMinLength) return false;
     if (username.length > config.usernameMaxLength) return false;
@@ -23,6 +42,11 @@ function isValidUsername(username, config) {
 }
 
 function isValidPassword(password, config) {
+
+    /*
+    Validate password length and pattern constraints.
+    */
+
     if (!password) return false;
     if (password.length < config.passwordMinLength) return false;
     if (password.length > config.passwordMaxLength) return false;
@@ -30,6 +54,11 @@ function isValidPassword(password, config) {
 }
 
 async function ensureMinDelay(startedAt, minDelayMs) {
+
+    /*
+    Enforce a minimum response time to reduce timing attacks.
+    */
+
     const elapsedMs = Date.now() - startedAt;
     const remainingMs = minDelayMs - elapsedMs;
     if (remainingMs > 0) {

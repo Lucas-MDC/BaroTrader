@@ -1,9 +1,18 @@
+/*
+HTTP routes for user registration.
+*/
+
 import { Router } from 'express';
 import { RegistrationError, registerUser } from './registerService.js';
 
 const router = Router();
 
 router.post('/register', async (req, res) => {
+
+    /*
+    Handle registration requests and map domain errors to HTTP responses.
+    */
+
     try {
         const { username, password } = req.body || {};
         const user = await registerUser({ username, password });

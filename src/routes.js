@@ -1,3 +1,7 @@
+/*
+Express router that serves static assets and API routes.
+*/
+
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -15,31 +19,45 @@ const PRIVATE_PAGES_DIR = path.join(SRC_ROOT, 'private', 'pages');
 const PRIVATE_ASSETS_DIR = path.join(SRC_ROOT, 'private', 'assets');
 const SHARED_DIR = path.join(SRC_ROOT, 'shared');
 
-// Recursos compartilhados entre paginas publicas e privadas (CSS/JS/imagens)
+/*
+Shared static assets for public and private pages (CSS/JS/images).
+*/
 router.use('/static/shared', express.static(SHARED_DIR));
 
-// Publico: apenas assets e paginas publicas
+/*
+Public assets and pages.
+*/
 router.use('/public/static/assets', express.static(PUBLIC_ASSETS_DIR));
 router.use('/public/static/pages', express.static(PUBLIC_PAGES_DIR));
 
-// Privado: proteger futuramente com requireAuth
+/*
+Private assets and pages (auth guard can be added later).
+*/
 router.use('/private/static/assets', express.static(PRIVATE_ASSETS_DIR));
 router.use('/private/static/pages', express.static(PRIVATE_PAGES_DIR));
 
-// API
+/*
+API routes.
+*/
 router.use('/api', servicesRouter);
 
-// Entrypoint: pagina inicial publica
+/*
+Public landing page.
+*/
 router.get('/', (req, res) => {
   res.sendFile(path.join(PUBLIC_PAGES_DIR, 'home.html'));
 });
 
-// 404 padrao
+/*
+Default 404 handler.
+*/
 router.use((req, res) => {
   res.status(404).send('Pagina nao encontrada');
 });
 
-// erro padrao
+/*
+Default error handler.
+*/
 router.use((err, req, res, next) => {
   console.error(err);
   if (res.headersSent) {

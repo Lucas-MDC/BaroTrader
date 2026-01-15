@@ -1,3 +1,8 @@
+/*
+Development helper CLI that wraps Docker Compose tasks for the project.
+Keeps the bring-up flow consistent across environments.
+*/
+
 import { spawnSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -9,10 +14,20 @@ const projectRoot = path.resolve(
 const composeFiles = ['compose.yaml', 'compose.dev.yaml'];
 
 function composeArgs() {
+
+    /*
+    Build the Compose file arguments in the correct order.
+    */
+
     return composeFiles.flatMap((file) => ['-f', file]);
 }
 
 function run(command, args, options = {}) {
+
+    /*
+    Run a child process and fail fast on errors or non-zero exits.
+    */
+
     const result = spawnSync(command, args, {
         cwd: projectRoot,
         stdio: 'inherit',
@@ -30,6 +45,11 @@ function run(command, args, options = {}) {
 }
 
 function ensureDocker() {
+
+    /*
+    Verify that the Docker daemon is available before running Compose.
+    */
+
     const result = spawnSync('docker', ['info'], {
         cwd: projectRoot,
         stdio: 'ignore'
@@ -42,6 +62,11 @@ function ensureDocker() {
 }
 
 function openBrowser(url) {
+
+    /*
+    Open a URL in the default browser on the current platform.
+    */
+
     if (process.platform === 'win32') {
         run('cmd', ['/c', 'start', '', url], { stdio: 'ignore' });
         return;
@@ -56,12 +81,17 @@ function openBrowser(url) {
 }
 
 function printUsage() {
+
+    /*
+    Print CLI usage for the helper script.
+    */
+
     console.log('Usage: node scripts/dev.js <up|down|reset|bootstrap|open> [extra args]');
 }
 
 const args = process.argv.slice(2);
 const action = args[0] || 'up';
-const extraArgs = args.slice(1);
+const extraArgs = args.slice(1).filter((arg) => arg !== '--');
 const baseArgs = ['compose', ...composeArgs()];
 
 switch (action) {

@@ -12,13 +12,8 @@ const cache = new Map();
 
 export async function loadSql(name) {
 
-    /* 
-    Loads an SQL file from the 'sql' directory with caching.
-    
-    Args:
-        name (string): The name of the SQL file to load.
-    Returns:
-        string: The contents of the SQL file.
+    /*
+    Load a SQL file from the sql directory and cache the contents.
     */
 
     if (cache.has(name)) return cache.get(name);
@@ -30,38 +25,28 @@ export async function loadSql(name) {
     return sql;
 }
 
-/*
-Sleeps for a specified number of milliseconds.
-Args:
-    ms (number): Number of milliseconds to sleep.
-*/
-export function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+export function sleep(ms) {
+
+    /*
+    Sleep for the specified number of milliseconds.
+    */
+
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export async function connectWithRetries(
     config, dbDriver, retries = 3, baseDelay = 500
 ) {
 
     /*
-    Tries to connect to a database with exponential backoff 
-    retry logic.
-    
-    Args:
-        config (object): Database connection configuration.
-        dbDriver (function): Function that attempts to connect 
-            to the database.
-        retries (number): Number of retry attempts.
-        baseDelay (number): Base delay in milliseconds for 
-            exponential backoff.
-    Returns:
-        object: Database connection object.
-
+    Attempt to connect with exponential backoff and retry logic.
     */
 
     for (let i = 0; i < retries; i++) {
         try {
-            let p = await dbDriver(config);
+            const connection = await dbDriver(config);
             console.log(`Connected to DB as ${config.user}`);
-            return p;
+            return connection;
 
         } catch (err) {
             if (i === retries - 1) throw err;

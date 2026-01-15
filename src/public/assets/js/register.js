@@ -1,3 +1,7 @@
+/*
+Client-side registration form validation and submission.
+*/
+
 import { getCredentialsFromInputs, showMessage } from '/static/shared/js/utils.js';
 
 const registerForm = document.querySelector('#register-form');
@@ -15,6 +19,11 @@ const passwordMinLength = passwordInput?.minLength ?? 8;
 const passwordMaxLength = passwordInput?.maxLength ?? 64;
 
 function isValidUsername(username) {
+
+  /*
+  Validate username input against length and optional regex rules.
+  */
+
   if (!username) return false;
   if (username.length < usernameMinLength) return false;
   if (usernameMaxLength > 0 && username.length > usernameMaxLength) return false;
@@ -22,6 +31,11 @@ function isValidUsername(username) {
 }
 
 function isValidPassword(password) {
+
+  /*
+  Validate password input against length and optional regex rules.
+  */
+
   if (!password) return false;
   if (password.length < passwordMinLength) return false;
   if (passwordMaxLength > 0 && password.length > passwordMaxLength) return false;
@@ -29,6 +43,11 @@ function isValidPassword(password) {
 }
 
 async function submitRegistration(event) {
+
+  /*
+  Send registration data to the API and report the outcome to the UI.
+  */
+
   event.preventDefault();
 
   const { username, password } = getCredentialsFromInputs(usernameInput, passwordInput);
@@ -90,4 +109,7 @@ async function submitRegistration(event) {
   }
 }
 
+/*
+Wire up the submit handler when the form is present.
+*/
 registerForm?.addEventListener('submit', submitRegistration);
