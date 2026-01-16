@@ -10,7 +10,7 @@ It also provides
 
 */
 
-import { db } from '../../infra/db/pool.js';
+import { db } from '../../db/pool.js';
 import { createUserModel } from './userModel.js';
 
 let cachedModel = null;
