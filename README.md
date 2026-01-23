@@ -101,18 +101,19 @@ config/
   security.js              # Hash config
   index.js                 # Config entrypoints
 db/
-  main.js                  # DB setup/migrate/seed/cleanup CLI
-  migrate.js               # node-pg-migrate runner + loader export
-  migration_sql.cjs        # SQL loader for migrations
-  pool.js                  # Tooling pg-promise pools (admin/migrator/runtime)
-  safety.js                # Destructive command guardrails
-  setup/                   # User/database provisioning and cleanup
-  seed/                    # Smoke test/seed routines
-sql/
-  runtime/                 # Runtime queries (pg-promise)
-  infra/                   # Setup/cleanup/seed SQL (tooling)
-  migrations/              # SQL-first migrations (DDL changes)
-migrations/                # node-pg-migrate wrappers (CommonJS)
+  engine/
+    main.js                # DB setup/migrate/seed/cleanup CLI
+    migrate.js             # node-pg-migrate runner + loader export
+    migration_sql.cjs      # SQL loader for migrations
+    pool.js                # Tooling pg-promise pools (admin/migrator/runtime)
+    safety.js              # Destructive command guardrails
+    setup/                 # User/database provisioning and cleanup
+    seed/                  # Smoke test/seed routines
+  sql/
+    runtime/               # Runtime queries (pg-promise)
+    infra/                 # Setup/cleanup/seed SQL (tooling)
+    migrations/            # SQL-first migrations (DDL changes)
+  migrations/              # node-pg-migrate wrappers (CommonJS)
 src/
   index.js                 # Express server entry point
   db/                      # Runtime pg-promise pool

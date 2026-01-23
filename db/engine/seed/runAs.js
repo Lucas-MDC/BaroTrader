@@ -1,0 +1,43 @@
+/*
+This module is responsible for running seed and smoke test
+*/
+
+import { getRuntimeDb } from '../pool.js';
+import { createUserModel } from '../../../src/models/user/userModel.js';
+
+async function runAsUser() {
+
+    /*
+    This function runs some operations as the application user.
+    */
+
+    console.log('Running operations as application user...');
+    
+    const userModel = createUserModel(getRuntimeDb());
+    const username = `dev_user_${Date.now()}`;
+    const passwordHash = 'hashed-password-placeholder';
+
+    const created = await userModel.createUser({
+        username,
+        passwordHash
+    });
+
+    const fetchedByUsername = await userModel.findByUsername(username);
+    const fetchedById = await userModel.findById(created?.id);
+
+    if (!fetchedByUsername || fetchedByUsername.id !== created?.id) {
+        throw new Error('Smoke test failed: fetch by username mismatch');
+    }
+
+    if (!fetchedById || fetchedById.id !== created?.id) {
+        throw new Error('Smoke test failed: fetch by id mismatch');
+    }
+
+    console.log('User smoke test succeeded:', {
+        id: fetchedById.id,
+        username: fetchedById.username,
+        createdAt: fetchedById.createdAt
+    });
+}
+
+export { runAsUser };

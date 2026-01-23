@@ -13,7 +13,7 @@ const cache = new Map();
 export async function loadSql(name) {
 
     /* 
-    Loads an SQL file from the 'sql' directory with caching.
+    Loads an SQL file from the 'db/sql' directory with caching.
     
     Args:
         name (string): The name of the SQL file to load.
@@ -23,7 +23,7 @@ export async function loadSql(name) {
 
     if (cache.has(name)) return cache.get(name);
     const baseDir = path.dirname(fileURLToPath(import.meta.url));
-    const p = path.join(baseDir, '..', '..', 'sql', name);
+    const p = path.join(baseDir, '..', '..', 'db', 'sql', name);
     
     const sql = await fs.readFile(p, 'utf8');
     cache.set(name, sql);

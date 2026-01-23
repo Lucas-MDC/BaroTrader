@@ -36,7 +36,7 @@ router.get('/', (req, res) => {
 
 // 404 padrao
 router.use((req, res) => {
-  res.status(404).send('Pagina nao encontrada');
+  res.status(404).send('Page not found');
 });
 
 // erro padrao
@@ -45,7 +45,7 @@ router.use((err, req, res, next) => {
   if (res.headersSent) {
     return next(err);
   }
-  res.status(500).send('Erro interno');
+  res.status(500).send('Internal server error');
 });
 
 export default router;

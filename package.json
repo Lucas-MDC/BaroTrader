@@ -9,10 +9,12 @@
     "dev": "node --watch src/index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "db:setup": "node db/main.js setup",
-    "db:migrate": "node db/main.js migrate",
-    "db:seed": "node db/main.js seed",
-    "db:cleanup": "node db/main.js cleanup",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
+    "test:coverage": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --coverage --runInBand --verbose",
+    "db:setup": "node db/engine/main.js setup",
+    "db:migrate": "node db/engine/main.js migrate",
+    "db:seed": "node db/engine/main.js seed",
+    "db:cleanup": "node db/engine/main.js cleanup",
     "db:test-sqlite": "node src/utils/database_sqlite.js"
   },
   "repository": {
@@ -38,6 +40,9 @@
     "@eslint/js": "^9.39.1",
     "eslint": "^9.39.1",
     "globals": "^16.5.0",
-    "node-pg-migrate": "^7.7.0"
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^30.2.0",
+    "node-pg-migrate": "^7.7.0",
+    "supertest": "^6.3.4"
   }
 }

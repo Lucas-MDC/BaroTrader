@@ -6,7 +6,7 @@ It provides methods to create the table, insert new users,
 and retrieve users by username or ID.
 */
 
-import sql from '../../../sql/index.js';
+import sql from '../../../db/sql/index.js';
 
 function mapUser(row) {
 
