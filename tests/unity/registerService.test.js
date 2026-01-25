@@ -44,6 +44,7 @@ let userModel;
 beforeEach(() => {
   getRegisterConfig.mockReset();
   getUserModel.mockReset();
+  sleep.mockReset();
   sleep.mockImplementation(() => Promise.resolve());
   createPasswordSalt.mockReset();
   hashPassword.mockReset();

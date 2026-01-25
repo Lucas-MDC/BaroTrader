@@ -1,16 +1,27 @@
-module.exports = {
+const baseConfig = {
   clearMocks: true,
   testEnvironment: 'node',
-  testMatch: [
-    '<rootDir>/tests/unity/**/*.test.js',
-    '<rootDir>/tests/integration/**/*.test.js'
-  ],
   moduleNameMapper: {
     '^/static/shared/js/utils.js$': '<rootDir>/src/shared/js/utils.js'
-  },
+  }
+};
+
+module.exports = {
   collectCoverageFrom: ['<rootDir>/src/**/*.js'],
   coveragePathIgnorePatterns: [
     '<rootDir>/node_modules/',
     '<rootDir>/tests/'
+  ],
+  projects: [
+    {
+      ...baseConfig,
+      displayName: 'integration',
+      testMatch: ['<rootDir>/tests/integration/**/*.test.js']
+    },
+    {
+      ...baseConfig,
+      displayName: 'unit',
+      testMatch: ['<rootDir>/tests/unity/**/*.test.js']
+    }
   ]
 };
