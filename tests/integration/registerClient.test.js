@@ -8,6 +8,7 @@ const html = readFileSync(
 );
 
 const registerScriptPath = '../../src/public/assets/js/register.js';
+const redirectToMock = jest.fn();
 
 const flushPromises = async () => {
   await Promise.resolve();
@@ -22,37 +23,6 @@ function loadPage({ includeFeedback = true } = {}) {
   if (!includeFeedback) {
     document.querySelector('#register-feedback')?.remove();
   }
-
-  stubLocation();
-}
-
-function stubLocation(initialHref = 'http://localhost/') {
-  let href = initialHref;
-  const location = {};
-  Object.defineProperty(location, 'href', {
-    get: () => href,
-    set: (value) => {
-      href = value;
-    }
-  });
-
-  try {
-    delete window.location;
-  } catch (error) {
-    // ignore and fall back to defineProperty/assignment
-  }
-
-  try {
-    Object.defineProperty(window, 'location', {
-      value: location,
-      configurable: true,
-      writable: true
-    });
-  } catch (error) {
-    window.location = location;
-  }
-
-  return location;
 }
 
 function mockFetchResponse({ ok = true, status = 200, json, jsonThrows } = {}) {
@@ -71,6 +41,10 @@ function mockFetchResponse({ ok = true, status = 200, json, jsonThrows } = {}) {
 describe('register client integration', () => {
   beforeEach(() => {
     jest.resetModules();
+    redirectToMock.mockReset();
+    jest.unstable_mockModule('../../src/public/assets/js/navigation.js', () => ({
+      redirectTo: redirectToMock
+    }));
     global.fetch = jest.fn();
   });
 
@@ -136,10 +110,10 @@ describe('register client integration', () => {
     expect(['#047857', 'rgb(4, 120, 87)']).toContain(feedback.style.color);
 
     jest.advanceTimersByTime(599);
-    expect(window.location.href).toBe('http://localhost/');
+    expect(redirectToMock).not.toHaveBeenCalled();
 
     jest.advanceTimersByTime(1);
-    expect(window.location.href).toBe(
+    expect(redirectToMock).toHaveBeenCalledWith(
       '/private/static/pages/homeInternal.html'
     );
 
@@ -166,7 +140,7 @@ describe('register client integration', () => {
     await flushPromises();
 
     jest.advanceTimersByTime(600);
-    expect(window.location.href).toBe(
+    expect(redirectToMock).toHaveBeenCalledWith(
       '/private/static/pages/homeInternal.html'
     );
 
@@ -194,7 +168,7 @@ describe('register client integration', () => {
 
     expect(feedback.textContent).toBe('User already exists.');
     expect(['#b91c1c', 'rgb(185, 28, 28)']).toContain(feedback.style.color);
-    expect(window.location.href).toBe('http://localhost/');
+    expect(redirectToMock).not.toHaveBeenCalled();
   });
 
   test('400 responses show invalid message and no redirect', async () => {
@@ -218,7 +192,7 @@ describe('register client integration', () => {
 
     expect(feedback.textContent).toBe('Username or password is invalid.');
     expect(['#b91c1c', 'rgb(185, 28, 28)']).toContain(feedback.style.color);
-    expect(window.location.href).toBe('http://localhost/');
+    expect(redirectToMock).not.toHaveBeenCalled();
   });
 
   test('non-ok responses show server error when provided', async () => {
@@ -284,17 +258,30 @@ describe('register client integration', () => {
 
     global.fetch.mockRejectedValue(new Error('Network down'));
 
-    form.checkValidity = () => true;
-    await import(registerScriptPath);
-    form.dispatchEvent(new Event('submit', { cancelable: true }));
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
-    await flushPromises();
+    try {
+      form.checkValidity = () => true;
+      await import(registerScriptPath);
+      form.dispatchEvent(new Event('submit', { cancelable: true }));
 
-    expect(feedback.textContent).toBe(
-      'Network error while attempting to register.'
-    );
-    expect(['#b91c1c', 'rgb(185, 28, 28)']).toContain(feedback.style.color);
-    expect(window.location.href).toBe('http://localhost/');
+      await flushPromises();
+
+      expect(feedback.textContent).toBe(
+        'Network error while attempting to register.'
+      );
+      expect(['#b91c1c', 'rgb(185, 28, 28)']).toContain(feedback.style.color);
+      expect(redirectToMock).not.toHaveBeenCalled();
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Failed to register user',
+        expect.objectContaining({ message: 'Network down' })
+      );
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
   });
 
   test('non-201 success responses are treated as success', async () => {
@@ -319,7 +306,7 @@ describe('register client integration', () => {
 
     expect(feedback.textContent).toBe('Registration complete! Redirecting...');
     jest.advanceTimersByTime(600);
-    expect(window.location.href).toBe(
+    expect(redirectToMock).toHaveBeenCalledWith(
       '/private/static/pages/homeInternal.html'
     );
 
@@ -349,4 +336,3 @@ describe('register client integration', () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 });
-

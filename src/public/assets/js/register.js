@@ -1,4 +1,5 @@
 import { getCredentialsFromInputs, showMessage } from '/static/shared/js/utils.js';
+import { redirectTo } from './navigation.js';
 
 const registerForm = document.querySelector('#register-form');
 const usernameInput = document.querySelector('#username-email');
@@ -46,7 +47,7 @@ async function submitRegistration(event) {
 
     showMessage(feedback, 'Registration complete! Redirecting...');
     setTimeout(() => {
-      window.location.href = '/private/static/pages/homeInternal.html';
+      redirectTo('/private/static/pages/homeInternal.html');
     }, 600);
   } catch (err) {
     console.error('Failed to register user', err);

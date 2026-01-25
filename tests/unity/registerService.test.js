@@ -37,7 +37,7 @@ const baseConfig = {
   passwordMaxLength: 5
 };
 
-const flushPromises = () => new Promise((resolve) => process.nextTick(resolve));
+const flushPromises = () => Promise.resolve();
 
 let userModel;
 
@@ -227,11 +227,11 @@ describe('registerUser minimum delay', () => {
     await flushPromises();
     expect(resolved).toBe(false);
 
-    jest.advanceTimersByTime(499);
+    await jest.advanceTimersByTimeAsync(499);
     await flushPromises();
     expect(resolved).toBe(false);
 
-    jest.advanceTimersByTime(1);
+    await jest.advanceTimersByTimeAsync(1);
     await promise;
     expect(resolved).toBe(true);
 
@@ -256,7 +256,7 @@ describe('registerUser minimum delay', () => {
     await flushPromises();
     expect(rejected).toBe(false);
 
-    jest.advanceTimersByTime(300);
+    await jest.advanceTimersByTimeAsync(300);
     await promise;
     expect(rejected).toBe(true);
 
