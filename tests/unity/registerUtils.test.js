@@ -1,8 +1,8 @@
 ﻿/** @jest-environment jsdom */
 /**
- * Esta suite cobre as utilidades isoladas usadas pelo fluxo de cadastro no cliente.
- * Os testes ficam juntos aqui porque validam helpers pequenos e reutilizaveis de DOM,
- * focando em como mensagens sao exibidas e como credenciais sao lidas dos inputs.
+ * This test suite covers the isolated utilities used by the client registration flow.
+ * The tests are grouped here because they validate small, reusable DOM helpers,
+ * focusing on how messages are shown and how credentials are read from inputs.
  */
 import { showMessage, getCredentialsFromInputs } from '../../src/shared/js/utils.js';
 

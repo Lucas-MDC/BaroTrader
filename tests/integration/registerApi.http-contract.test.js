@@ -2,9 +2,10 @@ import { jest } from '@jest/globals';
 import request from 'supertest';
 
 /**
- * Esta suite cobre o contrato HTTP da API de cadastro sem depender do backend real.
- * Os testes ficam juntos porque verificam como a rota traduz respostas e erros do
- * servico em status, headers e payloads JSON observaveis pelo cliente.
+ * This test suite covers the HTTP contract of the registration API without depending 
+ * on a real backend. The tests are grouped together because they verify how the 
+ * route translates service responses and errors into status codes, headers, and 
+ * JSON payloads observable by the client.
  */
 const registerUser = jest.fn();
 

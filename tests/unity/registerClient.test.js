@@ -1,8 +1,9 @@
 ﻿/** @jest-environment jsdom */
 /**
- * Esta suite cobre o bootstrap do script de cadastro no cliente em cenarios minimos.
- * Os testes ficam juntos porque verificam a camada de binding do formulario em isolamento,
- * especialmente a resiliencia quando elementos obrigatorios do DOM nao existem.
+ * This test suite covers the bootstrap of the client-side registration script 
+ * in minimal scenarios. The tests are grouped together because they verify 
+ * the form-binding layer in isolation, especially resilience when required 
+ * DOM elements are missing.
  */
 import { jest } from '@jest/globals';
 

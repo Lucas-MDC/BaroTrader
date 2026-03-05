@@ -1,9 +1,10 @@
 import { createIntegrationDbHarness } from './support/dbHarness.js';
 
 /**
- * Esta suite cobre o servico de cadastro integrado ao banco de dados real.
- * Os testes estao juntos porque validam o comportamento macro de registerUser
- * com persistencia real: criacao do usuario, hashing/salt armazenados, duplicidade e validacao.
+ * This test suite covers the registration service integrated with a real database.
+ * The tests are grouped together because they validate registerUser's 
+ * high-level behavior with real persistence: user creation, stored hash/salt 
+ * values, duplicate handling, and validation.
  */
 const harness = createIntegrationDbHarness({
   suiteName: 'register-service-db-integration'

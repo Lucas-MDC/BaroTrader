@@ -3,9 +3,10 @@ import { jest } from '@jest/globals';
 import { readFileSync } from 'fs';
 
 /**
- * Esta suite cobre a integracao entre a pagina real de cadastro e o script do cliente.
- * Os testes ficam juntos porque exercitam o fluxo macro do navegador em jsdom:
- * renderizacao da pagina, validacao do formulario, chamadas HTTP, feedback e redirecionamento.
+ * This test suite covers the integration between the real registration page and 
+ * the client script. The tests are grouped together because they exercise the 
+ * browser's high-level flow in jsdom: page rendering, form validation, HTTP 
+ * calls, feedback, and redirection.
  */
 const html = readFileSync(
   new URL('../../src/public/pages/noSession/register.html', import.meta.url),

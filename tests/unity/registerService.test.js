@@ -1,10 +1,11 @@
 ﻿import { jest } from '@jest/globals';
 
 /**
- * Esta suite cobre a regra de negocio do servico de cadastro em isolamento.
- * Os testes estao agrupados aqui porque validam o comportamento macro de registerUser
- * com dependencias mockadas: validacao, normalizacao, prevencao de duplicidade,
- * hashing, persistencia, propagacao de erros e atraso minimo de resposta.
+ * This test suite covers the business rules of the registration service in 
+ * isolation. The tests are grouped here because they validate registerUser's 
+ * high-level behavior with mocked dependencies: validation, normalization, 
+ * duplicate prevention, hashing, persistence, error propagation, and minimum 
+ * response delay.
  */
 const getRegisterConfig = jest.fn();
 const getUserModel = jest.fn();

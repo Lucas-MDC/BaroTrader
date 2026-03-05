@@ -2,9 +2,10 @@ import request from 'supertest';
 import { createIntegrationDbHarness } from './support/dbHarness.js';
 
 /**
- * Esta suite cobre um smoke test do endpoint de cadastro com backend e banco reais.
- * Os testes estao agrupados aqui porque validam o caminho integrado minimo da API,
- * incluindo persistencia, tratamento de duplicidade e rejeicao de payload invalido.
+ * This test suite covers a smoke test for the registration endpoint with a real 
+ * backend and database. The tests are grouped here because they validate the API's
+ * minimal integrated path, including persistence, duplicate handling, and rejection 
+ * of invalid payloads.
  */
 const harness = createIntegrationDbHarness({
   suiteName: 'register-api-backend-smoke'

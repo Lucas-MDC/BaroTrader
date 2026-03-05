@@ -2,9 +2,10 @@
 import crypto from 'crypto';
 
 /**
- * Esta suite cobre os utilitarios de senha usados pelo cadastro em nivel unitario.
- * Os testes estao juntos porque exercitam o mesmo servico criptografico isolado,
- * validando geracao de salt, hashing, formato de saida e tratamento de erros.
+ * This test suite covers the password utilities used by registration at the 
+ * unit level. The tests are grouped together because they exercise the same 
+ * cryptographic service in isolation, validating salt generation, hashing, 
+ * output format, and error handling.
  */
 const getHashConfig = jest.fn();
 
