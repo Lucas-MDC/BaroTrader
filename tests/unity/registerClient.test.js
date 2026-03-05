@@ -1,4 +1,9 @@
 ﻿/** @jest-environment jsdom */
+/**
+ * Esta suite cobre o bootstrap do script de cadastro no cliente em cenarios minimos.
+ * Os testes ficam juntos porque verificam a camada de binding do formulario em isolamento,
+ * especialmente a resiliencia quando elementos obrigatorios do DOM nao existem.
+ */
 import { jest } from '@jest/globals';
 
 const registerScriptPath = '../../src/public/assets/js/register.js';
@@ -31,11 +36,13 @@ describe('register client bindings', () => {
   });
 
   test('missing #register-form does not crash the script', async () => {
+    // REG-UNIT-003: missing bindings (client-side)
     document.body.innerHTML = '';
     await expect(import(registerScriptPath)).resolves.toBeDefined();
   });
 
   test('missing username/password inputs show unavailable message', async () => {
+    // REG-UNIT-003: missing bindings (client-side)
     buildForm({ includeUsername: false, includePassword: false });
 
     await import(registerScriptPath);

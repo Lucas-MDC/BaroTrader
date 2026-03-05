@@ -156,6 +156,17 @@ Conditions:
 <a id="registration-integration"></a>
 ### Integration
 
+Current files:
+- `tests/integration/registerApi.http-contract.test.js` (`_new_`)
+- `tests/integration/registerClient.jsdom.test.js` (`_new_`)
+- `tests/integration/registerService.db-integration.test.js` (`_new_`)
+- `tests/integration/registerApi.backend-smoke.test.js` (`_new_`)
+
+Deprecated files:
+- `tests/integration/registerApi.test.js` (`_deprecated_`)
+- `tests/integration/registerClient.test.js` (`_deprecated_`)
+- `tests/integration/registerHtml.test.js` (`_deprecated_`)
+
 <a id="reg-int-001"></a>
 #### REG-INT-001: register.html basic rendering
 Source: FE-REG-001
@@ -216,57 +227,53 @@ Conditions:
 - fetch is not called when password is only whitespace.
 
 <a id="reg-int-008"></a>
-#### REG-INT-008: API success (201)
+#### REG-INT-008: API success (201) (`_deprecated_`)
 Source: API-REG-001
 Conditions:
-- registerUser resolving returns status 201.
-- The JSON body contains only {id, username, createdAt}.
-- id and createdAt align with the model's return values.
+- Legacy coverage from `tests/integration/registerApi.test.js`.
+- Replaced by REG-INT-016 (`_new_`) and REG-INT-017 (`_new_`).
 
 <a id="reg-int-009"></a>
-#### REG-INT-009: API invalidation (400)
+#### REG-INT-009: API invalidation (400) (`_deprecated_`)
 Source: API-REG-002
 Conditions:
-- Empty body returns 400.
-- Empty or invalid username returns 400.
-- Empty or invalid password returns 400.
-- Response body carries {error: "Username or password is invalid."}.
+- Legacy coverage from `tests/integration/registerApi.test.js`.
+- Replaced by REG-INT-016 (`_new_`) and REG-INT-018 (`_new_`).
 
 <a id="reg-int-010"></a>
-#### REG-INT-010: API duplicate user (409)
+#### REG-INT-010: API duplicate user (409) (`_deprecated_`)
 Source: API-REG-003
 Conditions:
-- registerUser throwing RegistrationError with status 409 yields status 409.
-- Response JSON contains {error: "User already exists."}.
+- Legacy coverage from `tests/integration/registerApi.test.js`.
+- Replaced by REG-INT-016 (`_new_`) and REG-INT-018 (`_new_`).
 
 <a id="reg-int-011"></a>
-#### REG-INT-011: API generic server error (500)
+#### REG-INT-011: API generic server error (500) (`_deprecated_`)
 Source: API-REG-004
 Conditions:
-- Unknown errors (not RegistrationError) log a failure and respond with {error: "Failed to register user."}.
+- Legacy coverage from `tests/integration/registerApi.test.js`.
+- Replaced by REG-INT-016 (`_new_`).
 
 <a id="reg-int-012"></a>
-#### REG-INT-012: API payload parsing
+#### REG-INT-012: API payload parsing (`_deprecated_`)
 Source: API-REG-005
 Conditions:
-- Valid Content-Type: application/json parses correctly.
-- application/x-www-form-urlencoded requests are handled via express.urlencoded.
-- Invalid JSON returns a 400 from express.json before the route is invoked.
-- Extra fields in the body are ignored.
+- Legacy coverage from `tests/integration/registerApi.test.js`.
+- Replaced by REG-INT-016 (`_new_`).
 
 <a id="reg-int-013"></a>
-#### REG-INT-013: RegistrationError without statusCode
+#### REG-INT-013: RegistrationError without statusCode (`_deprecated_`)
 Source: Added
 Conditions:
-- RegistrationError without a statusCode yields status 400.
-- The error message is returned in {error: "..."}.
+- Legacy coverage from `tests/integration/registerApi.test.js`.
+- Replaced by REG-INT-016 (`_new_`).
 
 <a id="reg-int-014"></a>
-#### REG-INT-014: API response headers and body shape
+#### REG-INT-014: API response headers and body shape (`_deprecated_`)
 Source: Added
 Conditions:
-- Responses use application/json for JSON bodies.
-- Success responses never include passwordHash or passwordSalt.
+- Legacy coverage from `tests/integration/registerApi.test.js`.
+- Replaced by REG-INT-016 (`_new_`) and REG-INT-017 (`_new_`).
 
 <a id="reg-int-015"></a>
 #### REG-INT-015: UI copy matches current implementation
@@ -276,6 +283,50 @@ Conditions:
 - 400 responses show "Username or password is invalid.".
 - Generic non-ok responses show "Unable to create your account." when data.error is absent.
 - Network failures show "Network error while attempting to register.".
+
+<a id="reg-int-016"></a>
+#### REG-INT-016: register API HTTP contract (`_new_`)
+Source: API-REG-001 to API-REG-005
+Conditions:
+- Uses `tests/integration/registerApi.http-contract.test.js`.
+- Validates HTTP contract behavior for 201, 400, 409, 500, payload parsing, and response shape.
+- Uses service mocking intentionally for route contract isolation.
+
+<a id="reg-int-017"></a>
+#### REG-INT-017: register API backend smoke with real DB (`_new_`)
+Source: API-REG-001 and API-REG-003
+Conditions:
+- Uses `tests/integration/registerApi.backend-smoke.test.js`.
+- Executes full backend path (route -> service -> model -> PostgreSQL).
+- Success responses never expose `passwordHash` or `passwordSalt`.
+
+<a id="reg-int-018"></a>
+#### REG-INT-018: register API invalid payload on real backend (`_new_`)
+Source: API-REG-002
+Conditions:
+- Uses `tests/integration/registerApi.backend-smoke.test.js`.
+- Invalid username/password payloads return HTTP 400 on the real backend stack.
+
+<a id="reg-int-019"></a>
+#### REG-INT-019: register service persistence with real DB (`_new_`)
+Source: REG-SVC-003
+Conditions:
+- Uses `tests/integration/registerService.db-integration.test.js`.
+- `registerUser` persists user data and generated hash/salt in PostgreSQL.
+
+<a id="reg-int-020"></a>
+#### REG-INT-020: register service duplicate handling with real DB (`_new_`)
+Source: REG-SVC-002
+Conditions:
+- Uses `tests/integration/registerService.db-integration.test.js`.
+- Duplicate usernames raise `RegistrationError` with status 409.
+
+<a id="reg-int-021"></a>
+#### REG-INT-021: register service validation with real DB (`_new_`)
+Source: REG-SVC-001
+Conditions:
+- Uses `tests/integration/registerService.db-integration.test.js`.
+- Invalid payloads raise `RegistrationError` with status 400.
 
 <a id="registration-e2e"></a>
 ### End-to-End

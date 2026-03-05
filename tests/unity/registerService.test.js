@@ -1,5 +1,11 @@
 ﻿import { jest } from '@jest/globals';
 
+/**
+ * Esta suite cobre a regra de negocio do servico de cadastro em isolamento.
+ * Os testes estao agrupados aqui porque validam o comportamento macro de registerUser
+ * com dependencias mockadas: validacao, normalizacao, prevencao de duplicidade,
+ * hashing, persistencia, propagacao de erros e atraso minimo de resposta.
+ */
 const getRegisterConfig = jest.fn();
 const getUserModel = jest.fn();
 const sleep = jest.fn(() => Promise.resolve());
@@ -66,6 +72,7 @@ beforeEach(() => {
 
 describe('RegistrationError', () => {
   test('has the expected shape', () => {
+    // REG-UNIT-012: RegistrationError shape
     const error = new RegistrationError('Bad input');
     expect(error.name).toBe('RegistrationError');
     expect(error.statusCode).toBe(400);
@@ -75,6 +82,7 @@ describe('RegistrationError', () => {
 
 describe('registerUser validation and normalization', () => {
   test('trims username before validation', async () => {
+    // REG-UNIT-007: register service normalization and validation
     getRegisterConfig.mockReturnValue({
       ...baseConfig,
       usernameMinLength: 3,
@@ -94,6 +102,7 @@ describe('registerUser validation and normalization', () => {
   });
 
   test('trims password before validation', async () => {
+    // REG-UNIT-007: register service normalization and validation
     getRegisterConfig.mockReturnValue({
       ...baseConfig,
       passwordMinLength: 3,
@@ -107,6 +116,7 @@ describe('registerUser validation and normalization', () => {
   });
 
   test('rejects non-string username or password', async () => {
+    // REG-UNIT-007: register service normalization and validation
     await expect(
       registerUser({ username: 123, password: {} })
     ).rejects.toBeInstanceOf(RegistrationError);
@@ -114,24 +124,28 @@ describe('registerUser validation and normalization', () => {
   });
 
   test('enforces min length limits', async () => {
+    // REG-UNIT-007: register service normalization and validation
     await expect(
       registerUser({ username: 'ab', password: 'abc' })
     ).rejects.toBeInstanceOf(RegistrationError);
   });
 
   test('enforces max length limits', async () => {
+    // REG-UNIT-007: register service normalization and validation
     await expect(
       registerUser({ username: 'abc', password: 'abcdef' })
     ).rejects.toBeInstanceOf(RegistrationError);
   });
 
   test('applies username regex validation', async () => {
+    // REG-UNIT-007: register service normalization and validation
     await expect(
       registerUser({ username: 'Invalid', password: 'abc1' })
     ).rejects.toBeInstanceOf(RegistrationError);
   });
 
   test('applies password regex validation', async () => {
+    // REG-UNIT-007: register service normalization and validation
     getRegisterConfig.mockReturnValue({
       ...baseConfig,
       passwordRegex: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/,
@@ -147,6 +161,7 @@ describe('registerUser validation and normalization', () => {
 
 describe('registerUser duplicate prevention', () => {
   test('throws RegistrationError 409 when user already exists', async () => {
+    // REG-UNIT-008: register service duplicate prevention
     userModel.findByUsername.mockResolvedValue({ id: 99 });
 
     await expect(
@@ -159,6 +174,7 @@ describe('registerUser duplicate prevention', () => {
 
 describe('registerUser hashing and persistence', () => {
   test('creates salt, hashes password, and persists user', async () => {
+    // REG-UNIT-009: register service hashing and persistence
     await registerUser({ username: ' user ', password: ' pass1 ' });
 
     expect(createPasswordSalt).toHaveBeenCalledTimes(1);
@@ -173,6 +189,7 @@ describe('registerUser hashing and persistence', () => {
 
 describe('registerUser error propagation', () => {
   test('findByUsername errors bubble up', async () => {
+    // REG-UNIT-010: register service error propagation
     const error = new Error('lookup failed');
     userModel.findByUsername.mockRejectedValue(error);
 
@@ -182,6 +199,7 @@ describe('registerUser error propagation', () => {
   });
 
   test('hashPassword errors bubble up', async () => {
+    // REG-UNIT-010: register service error propagation
     const error = new Error('hash failed');
     hashPassword.mockRejectedValue(error);
 
@@ -191,6 +209,7 @@ describe('registerUser error propagation', () => {
   });
 
   test('unique constraint errors become RegistrationError 409', async () => {
+    // REG-UNIT-010: register service error propagation
     userModel.createUser.mockRejectedValue({ code: '23505' });
 
     await expect(
@@ -199,6 +218,7 @@ describe('registerUser error propagation', () => {
   });
 
   test('non-unique createUser errors bubble up', async () => {
+    // REG-UNIT-010: register service error propagation
     const error = new Error('insert failed');
     userModel.createUser.mockRejectedValue(error);
 
@@ -210,6 +230,7 @@ describe('registerUser error propagation', () => {
 
 describe('registerUser minimum delay', () => {
   test('does not resolve before registerMinDelayMs', async () => {
+    // REG-UNIT-011: register service minimum delay
     jest.useFakeTimers();
     sleep.mockImplementation((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
 
@@ -240,6 +261,7 @@ describe('registerUser minimum delay', () => {
   });
 
   test('errors still respect the minimum delay', async () => {
+    // REG-UNIT-011: register service minimum delay
     jest.useFakeTimers();
     sleep.mockImplementation((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
 
@@ -265,6 +287,7 @@ describe('registerUser minimum delay', () => {
   });
 
   test('zero delay does not wait', async () => {
+    // REG-UNIT-011: register service minimum delay
     getRegisterConfig.mockReturnValue({
       ...baseConfig,
       registerMinDelayMs: 0

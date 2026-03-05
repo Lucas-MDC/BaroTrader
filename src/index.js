@@ -1,12 +1,7 @@
-import express from 'express';
-import routes from './routes.js';
+import { createApp } from './app.js';
 
-const app = express();
+const app = createApp();
 const port = 3000;
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(routes);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

@@ -1,13 +1,20 @@
 ﻿/** @jest-environment jsdom */
+/**
+ * Esta suite cobre as utilidades isoladas usadas pelo fluxo de cadastro no cliente.
+ * Os testes ficam juntos aqui porque validam helpers pequenos e reutilizaveis de DOM,
+ * focando em como mensagens sao exibidas e como credenciais sao lidas dos inputs.
+ */
 import { showMessage, getCredentialsFromInputs } from '../../src/shared/js/utils.js';
 
 describe('showMessage', () => {
   test('no-op for null target', () => {
+    // REG-UNIT-004: showMessage
     expect(() => showMessage(null, 'Hello')).not.toThrow();
     expect(() => showMessage(undefined, 'Hello')).not.toThrow();
   });
 
   test('sets success color and text', () => {
+    // REG-UNIT-004: showMessage
     const target = document.createElement('p');
     showMessage(target, 'Success');
     expect(target.textContent).toBe('Success');
@@ -15,6 +22,7 @@ describe('showMessage', () => {
   });
 
   test('sets error color and text', () => {
+    // REG-UNIT-004: showMessage
     const target = document.createElement('p');
     showMessage(target, 'Error', true);
     expect(target.textContent).toBe('Error');
@@ -22,6 +30,7 @@ describe('showMessage', () => {
   });
 
   test('keeps HTML as text', () => {
+    // REG-UNIT-004: showMessage
     const target = document.createElement('p');
     const message = '<img src=x onerror="alert(1)">';
     showMessage(target, message);
@@ -30,6 +39,7 @@ describe('showMessage', () => {
   });
 
   test('empty message clears text', () => {
+    // REG-UNIT-004: showMessage
     const target = document.createElement('p');
     target.textContent = 'Existing';
     showMessage(target, '');
@@ -39,6 +49,7 @@ describe('showMessage', () => {
 
 describe('getCredentialsFromInputs', () => {
   test('trims username and keeps raw password', () => {
+    // REG-UNIT-005: getCredentialsFromInputs
     const usernameInput = { value: '  user  ' };
     const passwordInput = { value: '  pass  ' };
     const { username, password } = getCredentialsFromInputs(
@@ -50,12 +61,14 @@ describe('getCredentialsFromInputs', () => {
   });
 
   test('null inputs return empty strings', () => {
+    // REG-UNIT-005: getCredentialsFromInputs
     const { username, password } = getCredentialsFromInputs(null, undefined);
     expect(username).toBe('');
     expect(password).toBe('');
   });
 
   test('non-string usernames return an empty string', () => {
+    // REG-UNIT-005: getCredentialsFromInputs
     const numberInput = { value: 123 };
     const objectInput = { value: { name: 'user' } };
     const passwordInput = { value: 'pass' };
