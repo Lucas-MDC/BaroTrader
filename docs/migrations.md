@@ -14,19 +14,19 @@ This project uses node-pg-migrate with SQL-first migrations.
 - Migrations use `MIGRATIONS_DATABASE_URL` (or `MIGRATION_*` primitives) for DDL/DCL with `--database-url-var`.
 
 ## Structure
-- `sql/migrations/*.sql` holds the DDL changes (up).
-- `sql/migrations/*.down.sql` holds rollback SQL (down).
-- `db/migration_sql.cjs` loads migration SQL from disk.
-- `migrations/*.js` are node-pg-migrate wrappers that only wire `up`/`down`.
+- `db/sql/migrations/*.sql` holds the DDL changes (up).
+- `db/sql/migrations/*.down.sql` holds rollback SQL (down).
+- `db/engine/migration_sql.cjs` loads migration SQL from disk.
+- `db/migrations/*.js` are node-pg-migrate wrappers that only wire `up`/`down`.
 - Baseline order: `001_init_users`, `002_migrator_privileges`, `003_base_role_permissions`.
 
 ## Creating a migration
-1. Add a new SQL file in `sql/migrations/NNN_description.sql`.
-2. Add a rollback SQL file in `sql/migrations/NNN_description.down.sql`.
-3. Add a wrapper in `migrations/NNN_description.js`:
+1. Add a new SQL file in `db/sql/migrations/NNN_description.sql`.
+2. Add a rollback SQL file in `db/sql/migrations/NNN_description.down.sql`.
+3. Add a wrapper in `db/migrations/NNN_description.js`:
 
 ```js
-const { loadMigrationSql } = require('../db/migration_sql.cjs');
+const { loadMigrationSql } = require('../engine/migration_sql.cjs');
 
 exports.up = (pgm) => {
     pgm.sql(loadMigrationSql('NNN_description.sql'));
@@ -57,7 +57,7 @@ Notes:
 - `redo` replays the latest migration; `redo N` replays the latest N.
 
 ## Runner behavior
-- The runner always passes `--migrations-dir migrations`.
+- The runner always passes `--migrations-dir db/migrations`.
 - The runner always passes `--database-url-var MIGRATIONS_DATABASE_URL`.
 - The runner uses `--envPath .env` when the root `.env` exists.
 
@@ -69,7 +69,7 @@ Notes:
 ## Checking sync state
 - Run `npm run db:migrate status` to list applied and pending migrations.
 - If anything is pending, run `npm run db:migrate up`.
-- node-pg-migrate records applied migrations in the `pgmigrations` table. You can compare that list with the filenames in `migrations/`.
+- node-pg-migrate records applied migrations in the `pgmigrations` table. You can compare that list with the filenames in `db/migrations/`.
 
 Example query:
 
@@ -80,6 +80,6 @@ ORDER BY run_on;
 ```
 
 ## Keeping the folder manageable
-- It's normal for `migrations/` and `sql/migrations/` to grow over time.
+- It's normal for `db/migrations/` and `db/sql/migrations/` to grow over time.
 - Keep files ordered by prefix and avoid renaming applied migrations.
 - For branch-specific work, prefer rebuilds or a per-branch DB instead of editing history.

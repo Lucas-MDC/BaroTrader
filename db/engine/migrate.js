@@ -1,19 +1,19 @@
 /*
 Runs node-pg-migrate against the application database using
-MIGRATIONS_DATABASE_URL and the repo-root migrations folder.
+MIGRATIONS_DATABASE_URL and the db/migrations folder.
 */
 
 import fs from 'fs';
 import path from 'path';
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
-import { getMigrationsDbConfig } from '../config/index.js';
+import { getMigrationsDbConfig } from '../../config/index.js';
 import { loadMigrationSql } from './migration_sql.cjs';
 import { getOwnerDb } from './pool.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const projectRoot = path.resolve(__dirname, '..');
+const projectRoot = path.resolve(__dirname, '..', '..');
 const cliPath = path.join(
     projectRoot,
     'node_modules',
@@ -21,7 +21,7 @@ const cliPath = path.join(
     'bin',
     'node-pg-migrate.js'
 );
-const migrationsDir = path.join(projectRoot, 'migrations');
+const migrationsDir = path.join(projectRoot, 'db', 'migrations');
 const defaultMigrationsTable = 'pgmigrations';
 const defaultMigrationsSchema = 'public';
 
@@ -69,7 +69,7 @@ export async function runMigrations(direction = 'up', extraArgs = []) {
 
         const baseArgs = [
             '--migrations-dir',
-            'migrations',
+            'db/migrations',
             '--ignore-pattern',
             'package\\.json',
             '--database-url-var',

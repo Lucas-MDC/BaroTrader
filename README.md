@@ -41,11 +41,43 @@ environment variables (not stored in `.env`).
 | `npm run dev` | Start the application in development mode with hot reload |
 | `npm run lint` | Run ESLint to check code quality |
 | `npm run lint:fix` | Run ESLint and fix auto-fixable issues |
+| `npm run test` | Run all Jest projects |
+| `npm run test:unit` | Run the Jest unit project |
+| `npm run test:integration` | Run the Jest integration project |
+| `npm run test:integration:debug` | Run integration tests in-band (recommended for interactive DB debugging) |
+| `npm run test:coverage` | Run Jest coverage report |
 | `npm run db:setup` | Provision the runtime/migrator users and application database |
 | `npm run db:migrate` | Run migrations (use `up`, `down`, `redo`, `status`) |
 | `npm run db:seed` | Run a smoke test/seed as the application user |
 | `npm run db:cleanup` | Clean up (drop) the database, user and roles (guarded) |
 | `npm run db:test-sqlite` | Test SQLite database operations |
+
+## Testing
+
+Current test folders:
+
+```text
+tests/
+  unity/
+  integration/
+    registerApi.http-contract.test.js
+    registerClient.jsdom.test.js
+    registerService.db-integration.test.js
+    registerApi.backend-smoke.test.js
+```
+
+Integration DB debugging flags:
+
+- `KEEP_DB=1`: skip test database cleanup in teardown.
+
+This flag is intended for local development/debug sessions. Keep it disabled in CI/homolog/deploy to keep tests fully automatic and fast.
+
+PowerShell example:
+
+```powershell
+$env:KEEP_DB='1'
+npm run test:integration:debug
+```
 
 ## Database Setup
 
@@ -101,20 +133,22 @@ config/
   security.js              # Hash config
   index.js                 # Config entrypoints
 db/
-  main.js                  # DB setup/migrate/seed/cleanup CLI
-  migrate.js               # node-pg-migrate runner + loader export
-  migration_sql.cjs        # SQL loader for migrations
-  pool.js                  # Tooling pg-promise pools (admin/migrator/runtime)
-  safety.js                # Destructive command guardrails
-  setup/                   # User/database provisioning and cleanup
-  seed/                    # Smoke test/seed routines
-sql/
-  runtime/                 # Runtime queries (pg-promise)
-  infra/                   # Setup/cleanup/seed SQL (tooling)
-  migrations/              # SQL-first migrations (DDL changes)
-migrations/                # node-pg-migrate wrappers (CommonJS)
+  engine/
+    main.js                # DB setup/migrate/seed/cleanup CLI
+    migrate.js             # node-pg-migrate runner + loader export
+    migration_sql.cjs      # SQL loader for migrations
+    pool.js                # Tooling pg-promise pools (admin/migrator/runtime)
+    safety.js              # Destructive command guardrails
+    setup/                 # User/database provisioning and cleanup
+    seed/                  # Smoke test/seed routines
+  sql/
+    runtime/               # Runtime queries (pg-promise)
+    infra/                 # Setup/cleanup/seed SQL (tooling)
+    migrations/            # SQL-first migrations (DDL changes)
+  migrations/              # node-pg-migrate wrappers (CommonJS)
 src/
-  index.js                 # Express server entry point
+  app.js                   # Express app factory (middlewares + routes)
+  index.js                 # Runtime server entry point (listen)
   db/                      # Runtime pg-promise pool
   models/                  # Domain models (repositories)
     user/
@@ -130,6 +164,7 @@ docs/
   db-architecture.md       # DB setup, roles, pooling and SQL layout
   db-lifecycle.md          # DB lifecycle, safety gates, use cases
   migrations.md            # How to create/run/check migrations
+  plans/                   # Test plans and feature-level coverage map
 ```
 
 ## License

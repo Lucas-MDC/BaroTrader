@@ -2,7 +2,7 @@ const {
     escapeIdentifier,
     escapeLiteral,
     loadMigrationSql
-} = require('../db/migration_sql.cjs');
+} = require('../engine/migration_sql.cjs');
 
 function resolveMigratorUser() {
     const databaseUrl = process.env.MIGRATIONS_DATABASE_URL || process.env.MIGRATION_DATABASE_URL;

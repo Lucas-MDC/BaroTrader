@@ -1,4 +1,4 @@
-const { loadMigrationSql } = require('../db/migration_sql.cjs');
+const { loadMigrationSql } = require('../engine/migration_sql.cjs');
 
 exports.up = (pgm) => {
     pgm.sql(loadMigrationSql('001_init_users.sql'));

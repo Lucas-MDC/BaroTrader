@@ -2,7 +2,7 @@
 Guards for destructive database operations in non-production environments.
 */
 
-import { loadEnv } from '../config/env.js';
+import { loadEnv } from '../../config/env.js';
 
 const ALLOWED_ENVS = new Set(['development', 'test']);
 

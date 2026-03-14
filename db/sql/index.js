@@ -1,6 +1,6 @@
 /*
 Central registry for SQL files via pg-promise QueryFile.
-Runtime queries live under sql/runtime and tooling SQL under sql/infra.
+Runtime queries live under db/sql/runtime and tooling SQL under db/sql/infra.
 */
 
 import { fileURLToPath } from 'url';

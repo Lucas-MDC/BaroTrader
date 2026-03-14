@@ -8,7 +8,7 @@ import {
     getAdminDbConfig,
     getMigrationsDbConfig,
     getRuntimeDbConfig
-} from '../config/index.js';
+} from '../../config/index.js';
 
 const pgp = pgPromise({ capSQL: true });
 

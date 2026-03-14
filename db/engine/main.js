@@ -124,7 +124,7 @@ function printUsage() {
     /*
     Print CLI usage instructions for database tooling.
     */
-    console.log('Usage: node db/main.js [setup|migrate|seed|cleanup]');
+    console.log('Usage: node db/engine/main.js [setup|migrate|seed|cleanup]');
     console.log('  setup               - Create database user and database');
     console.log('  migrate <cmd> [args] - Run migrations (up|down|redo|status)');
     console.log('  seed                - Seed/smoke test as application user');
