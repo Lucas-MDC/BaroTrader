@@ -441,17 +441,13 @@ npm run test:coverage
 ### Coverage exclusions
 
 Coverage is controlled by `collectCoverageFrom` and `coveragePathIgnorePatterns` in
-`jest.config.cjs`. To exclude files that should not count toward coverage, add
-patterns such as:
+`jest.config.cjs`. The current config uses:
 
 ```js
-collectCoverageFrom: [
-  '<rootDir>/src/**/*.js',
-  '!<rootDir>/src/index.js'
-],
+collectCoverageFrom: ['<rootDir>/src/**/*.js'],
 coveragePathIgnorePatterns: [
-  '<rootDir>/src/db/',
-  '<rootDir>/src/utils/legacy/'
+  '<rootDir>/node_modules/',
+  '<rootDir>/tests/'
 ]
 ```
 
