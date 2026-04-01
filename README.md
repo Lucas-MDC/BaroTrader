@@ -4,6 +4,8 @@ BaroTrader application with Express.js and PostgreSQL database.
 
 ## Quickstart (Docker Compose DEV)
 
+This repository is Docker-first. The supported local startup path is Docker Compose; there is no separate manual bootstrap flow documented here.
+
 Prerequisites:
 - Docker Desktop/Engine + Docker Compose v2
 - Node.js (v18+) to run npm scripts
@@ -45,10 +47,6 @@ runs migrations, and starts the app. Use `npm run dev:up -- -d` for detached.
   `BAROTRADER_DB_ADMIN_PASS`, `DATABASE_URL`, `MIGRATIONS_DATABASE_URL`,
   `MIGRATION_DATABASE_URL`, `HASH_PEPPER`.
 
-For local Postgres (no Docker), copy `.env.example` to `.env`, fill values, and
-export `BAROTRADER_DB_ADMIN_DBNAME`, `BAROTRADER_DB_ADMIN_USER`,
-`BAROTRADER_DB_ADMIN_PASS` in your shell when running `db:setup`/`db:cleanup`.
-
 ## Production compose skeleton
 
 `compose.prod.yaml` is a structure-only template with required variables and no
@@ -64,6 +62,12 @@ docker compose -f compose.yaml -f compose.prod.yaml up --build
 |--------|-------------|
 | `npm start` | Start the application |
 | `npm run dev` | Start the application in development mode with hot reload |
+| `npm run dev:up` | Build + start db/migrate/app (foreground) |
+| `npm run dev:up:bg` | Build + start the stack detached |
+| `npm run dev:down` | Stop the dev stack (keeps data) |
+| `npm run dev:reset` | Stop and remove volumes (fresh DB) |
+| `npm run dev:bootstrap` | Re-run DB bootstrap inside Docker |
+| `npm run dev:open` | Open `http://localhost:3000` |
 | `npm run lint` | Run ESLint to check code quality |
 | `npm run lint:fix` | Run ESLint and fix auto-fixable issues |
 | `npm run test` | Run all Jest projects |
@@ -71,10 +75,8 @@ docker compose -f compose.yaml -f compose.prod.yaml up --build
 | `npm run test:integration` | Run the Jest integration project |
 | `npm run test:integration:debug` | Run integration tests in-band (recommended for interactive DB debugging) |
 | `npm run test:coverage` | Run Jest coverage report |
-| `npm run db:setup` | Provision the runtime/migrator users and application database |
 | `npm run db:migrate` | Run migrations (use `up`, `down`, `redo`, `status`) |
 | `npm run db:seed` | Run a smoke test/seed as the application user |
-| `npm run db:cleanup` | Clean up (drop) the database, user and roles (guarded) |
 
 ## Testing
 
@@ -83,11 +85,18 @@ Current test folders:
 ```text
 tests/
   unity/
+    branchProtectionGuard.test.js
+    passwordService.test.js
+    registerClient.test.js
+    registerService.test.js
+    registerUtils.test.js
   integration/
+    registerApi.backend-smoke.test.js
     registerApi.http-contract.test.js
     registerClient.jsdom.test.js
     registerService.db-integration.test.js
-    registerApi.backend-smoke.test.js
+    support/
+      dbHarness.js
 ```
 
 Integration DB debugging flags:
@@ -103,27 +112,6 @@ $env:KEEP_DB='1'
 npm run test:integration:debug
 ```
 
-## Database Setup
-
-For local Postgres without Docker:
-
-1. Ensure PostgreSQL is running
-2. Configure `.env`
-3. Export `BAROTRADER_DB_ADMIN_DBNAME`, `BAROTRADER_DB_ADMIN_USER`,
-   and `BAROTRADER_DB_ADMIN_PASS` in your shell
-4. Run:
-
-```bash
-npm run db:setup
-npm run db:migrate -- up
-```
-
-Optionally run the smoke test/seed:
-
-```bash
-npm run db:seed
-```
-
 ## Migrations
 
 Migrations are SQL-first and executed via node-pg-migrate. For details on how to
@@ -136,11 +124,13 @@ For lifecycle guidance (setup, cleanup, branching, and safety gates), see
 
 ```
 config/
-  db.runtime.js            # Runtime DB config (env)
-  db.migrations.js         # Migrations DB config (env)
   db.admin.js              # Admin DB config (env)
-  security.js              # Hash config
+  db.migrations.js         # Migrations DB config (env)
+  db.runtime.js            # Runtime DB config (env)
+  db.shared.js             # Shared DB config helpers
+  env.js                   # Environment loading and expansion
   index.js                 # Config entrypoints
+  security.js              # Hash config
 db/
   engine/
     main.js                # DB setup/migrate/seed/cleanup CLI
@@ -148,25 +138,80 @@ db/
     migration_sql.cjs      # SQL loader for migrations
     pool.js                # Tooling pg-promise pools (admin/migrator/runtime)
     safety.js              # Destructive command guardrails
-    setup/                 # User/database provisioning and cleanup
-    seed/                  # Smoke test/seed routines
+    seed/
+      runAs.js             # Seed helpers executed with the app user
+    setup/
+      cleanup.js           # DB/user cleanup helpers
+      database.js          # DB/user provisioning helpers
   sql/
-    runtime/               # Runtime queries (pg-promise)
-    infra/                 # Setup/cleanup/seed SQL (tooling)
+    index.js               # SQL loader entrypoint
+    infra/
+      database/            # Bootstrap/cleanup SQL for DB lifecycle
+      roles/               # Role management SQL
+      seed/                # Seed SQL
+      users/               # User management SQL
     migrations/            # SQL-first migrations (DDL changes)
-  migrations/              # node-pg-migrate wrappers (CommonJS)
+    runtime/
+      user/                # Runtime user queries
+  migrations/
+    001_init_users.js
+    002_migrator_privileges.js
+    003_base_role_permissions.js
+    004_add_password_salt.js
+    package.json
 src/
   app.js                   # Express app factory (middlewares + routes)
   index.js                 # Runtime server entry point (listen)
-  db/                      # Runtime pg-promise pool
-  models/                  # Domain models (repositories)
+  routes.js                # Route wiring
+  db/
+    pool.js                # Runtime pg-promise pool
+  models/
     user/
       index.js             # Public API for user model
       userModel.js         # User data access using runtime pool
+  private/
+    assets/
+    pages/
+  public/
+    assets/
+    pages/
+  services/
+    register/
+      passwordService.js
+      register.js
+      registerService.js
+      sleep.js
+    services.js
+  shared/
+    css/
+      style.css
+    js/
+      utils.js
   utils/
-    database_utils.js      # Shared database utilities
-    databaseWrappers/      # Database abstraction layers
+    databaseWrappers/
       postgresql_wrapper.js
+scripts/
+  dev.js                   # Docker Compose helper CLI
+docker/
+  node/
+    entrypoint-dev.sh
+  postgres/
+    init/
+      01_bootstrap_roles.sh
+tests/
+  integration/
+    support/
+      dbHarness.js
+    registerApi.backend-smoke.test.js
+    registerApi.http-contract.test.js
+    registerClient.jsdom.test.js
+    registerService.db-integration.test.js
+  unity/
+    branchProtectionGuard.test.js
+    passwordService.test.js
+    registerClient.test.js
+    registerService.test.js
+    registerUtils.test.js
 docs/
   db-architecture.md       # DB setup, roles, pooling and SQL layout
   db-lifecycle.md          # DB lifecycle, safety gates, use cases

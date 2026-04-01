@@ -26,7 +26,7 @@ Outros scripts disponiveis:
 
 - `npm run dev:down`: para a stack sem remover dados.
 - `npm run dev:reset`: desce os containers e remove os volumes nomeados (limpeza completa do banco).
-- `npm run dev:bootstrap`: sobe o banco e executa `npm run db:setup` dentro do container para garantir roles/migrator mesmo quando o volume ja existe.
+- `npm run dev:bootstrap`: sobe o banco e reaplica o bootstrap interno para garantir roles/migrator mesmo quando o volume ja existe.
 - `npm run dev:open`: abre o navegador em `http://localhost:3000`.
 
 ## Servicos da stack
@@ -80,7 +80,7 @@ O script `01_bootstrap_roles.sh` e idempotente: ele verifica se os roles ja exis
 3. Acesse `http://localhost:3000`. Para abrir automaticamente basta `npm run dev:open`.
 4. Pare a stack com `npm run dev:down`.
 5. Para reiniciar com banco limpo, use `npm run dev:reset`.
-6. Para reinstalar logins/migrator sem recriar o volume, rode `npm run dev:bootstrap`.
+6. Para reaplicar o bootstrap interno sem recriar o volume, rode `npm run dev:bootstrap`.
 
 ## Por que as decisoes foram tomadas
 
@@ -95,4 +95,4 @@ O script `01_bootstrap_roles.sh` e idempotente: ele verifica se os roles ja exis
 - Rode `docker compose ps` e `docker compose logs migrate` para monitorar o fluxo.
 - Use `npm run dev:up:bg` para subir em background, ou mantenha `npm run dev:up` se quiser os logs no terminal.
 - Apague o volume com `npm run dev:reset` quando quiser refazer tudo em branco.
-- Edite `docker/postgres/init/*` para personalizar o bootstrap; quando o volume ja existe, use `npm run dev:bootstrap` para reaplicar o setup.
+- Edite `docker/postgres/init/*` para personalizar o bootstrap; quando o volume ja existe, use `npm run dev:bootstrap` para reaplicar o bootstrap interno.
