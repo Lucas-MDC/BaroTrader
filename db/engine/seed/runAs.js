@@ -3,7 +3,7 @@ This module is responsible for running seed and smoke test
 */
 
 import { getRuntimeDb } from '../pool.js';
-import { createUserModel } from '../../src/models/user/userModel.js';
+import { createUserModel } from '../../../src/models/user/userModel.js';
 
 async function runAsUser() {
 

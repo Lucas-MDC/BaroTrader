@@ -6,7 +6,7 @@ the runtime login, the migrator login, and the database owned by the migrator.
 import {
     getMigrationsDbConfig,
     getRuntimeDbConfig
-} from '../../config/index.js';
+} from '../../../config/index.js';
 import sql from '../../sql/index.js';
 import { getAdminDb } from '../pool.js';
 

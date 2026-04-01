@@ -10,6 +10,14 @@ export default defineConfig([
     languageOptions: { globals: globals.browser },
   },
   {
+    files: ["tests/**/*.js"],
+    plugins: { js },
+    extends: ["js/recommended"],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser, ...globals.jest },
+    },
+  },
+  {
     files: ["**/*.{js,mjs,cjs}"],
     ignores: ["src/public/**/*.js", "src/private/assets/js/**/*.js"],
     plugins: { js },

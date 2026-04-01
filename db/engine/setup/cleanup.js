@@ -8,7 +8,7 @@ import {
     getBaseRole,
     getMigrationsDbConfig,
     getRuntimeDbConfig
-} from '../../config/index.js';
+} from '../../../config/index.js';
 import sql from '../../sql/index.js';
 import { getAdminDb } from '../pool.js';
 import { assertDestructiveAllowed } from '../safety.js';

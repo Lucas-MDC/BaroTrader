@@ -11,15 +11,14 @@ import { fileURLToPath } from 'url';
 const cache = new Map();
 
 export async function loadSql(name) {
-
     /*
-    Load a SQL file from the sql directory and cache the contents.
+    Load a SQL file from db/sql and cache the contents.
     */
 
     if (cache.has(name)) return cache.get(name);
     const baseDir = path.dirname(fileURLToPath(import.meta.url));
-    const p = path.join(baseDir, '..', '..', 'sql', name);
-    
+    const p = path.join(baseDir, '..', '..', 'db', 'sql', name);
+
     const sql = await fs.readFile(p, 'utf8');
     cache.set(name, sql);
     return sql;

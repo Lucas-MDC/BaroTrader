@@ -6,7 +6,7 @@ const {
     escapeIdentifier,
     escapeLiteral,
     loadMigrationSql
-} = require('../db/migration_sql.cjs');
+} = require('../engine/migration_sql.cjs');
 
 function resolveRuntimeUser() {
 

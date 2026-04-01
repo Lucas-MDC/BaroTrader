@@ -20,6 +20,12 @@ class RegistrationError extends Error {
     }
 }
 
+function isUniqueViolation(error) {
+    if (!error) return false;
+    const code = error.code || error?.cause?.code;
+    return code === '23505';
+}
+
 function sanitizeUsername(username) {
 
     /*
@@ -85,22 +91,28 @@ export async function registerUser({ username, password }) {
             !isValidUsername(normalizedUsername, config) ||
             !isValidPassword(normalizedPassword, config)
         ) {
-            throw new RegistrationError('Usuario ou senha invalidos', 400);
+            throw new RegistrationError('Username or password is invalid.', 400);
         }
 
         const alreadyExists = await userModel.findByUsername(normalizedUsername);
         if (alreadyExists) {
-            throw new RegistrationError('User already exists', 409);
+            throw new RegistrationError('User already exists.', 409);
         }
 
         const passwordSalt = createPasswordSalt();
         const passwordHash = await hashPassword(normalizedPassword, passwordSalt);
-
-        return userModel.createUser({
-            username: normalizedUsername,
-            passwordHash,
-            passwordSalt
-        });
+        try {
+            return await userModel.createUser({
+                username: normalizedUsername,
+                passwordHash,
+                passwordSalt
+            });
+        } catch (error) {
+            if (isUniqueViolation(error)) {
+                throw new RegistrationError('User already exists.', 409);
+            }
+            throw error;
+        }
     } finally {
         await ensureMinDelay(startedAt, config.registerMinDelayMs);
     }
