@@ -8,7 +8,6 @@ import path from 'path';
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import { getMigrationsDbConfig } from '../../config/index.js';
-import { loadMigrationSql } from './migration_sql.cjs';
 import { getOwnerDb } from './pool.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -217,5 +216,3 @@ export async function printMigrationStatus() {
     console.log(`---`);
     console.log(`Total: ${migrationNames.length} | Applied: ${appliedCount} | Pending: ${pendingCount}`);
 }
-
-export { loadMigrationSql };
