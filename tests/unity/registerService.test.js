@@ -21,7 +21,7 @@ jest.unstable_mockModule('../../src/models/user/index.js', () => ({
   getUserModel
 }));
 
-jest.unstable_mockModule('../../src/utils/database_utils.js', () => ({
+jest.unstable_mockModule('../../src/services/register/sleep.js', () => ({
   sleep
 }));
 

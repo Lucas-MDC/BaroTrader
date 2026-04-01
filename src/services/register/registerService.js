@@ -4,8 +4,8 @@ Registration domain logic for creating users with validation and hashing.
 
 import { getRegisterConfig } from '../../../config/index.js';
 import { getUserModel } from '../../models/user/index.js';
-import { sleep } from '../../utils/database_utils.js';
 import { createPasswordSalt, hashPassword } from './passwordService.js';
+import { sleep } from './sleep.js';
 
 class RegistrationError extends Error {
     constructor(message, statusCode = 400) {
