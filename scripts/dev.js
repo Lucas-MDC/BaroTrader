@@ -115,11 +115,15 @@ switch (action) {
         break;
     case 'bootstrap':
         ensureDocker();
-        run('docker', [...baseArgs, 'up', '-d', 'db']);
+        run('docker', [...baseArgs, 'up', '-d', '--wait', 'db']);
         run('docker', [
             ...baseArgs,
             'run',
             '--rm',
+            '-e',
+            'DB_HOST=db',
+            '-e',
+            'DB_PORT=5432',
             'migrate',
             'npm',
             'run',

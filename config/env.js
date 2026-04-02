@@ -9,10 +9,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 let loaded = false;
-const ADMIN_KEYS = [
+const PRESERVED_KEYS = [
     'BAROTRADER_DB_ADMIN_DBNAME',
     'BAROTRADER_DB_ADMIN_USER',
-    'BAROTRADER_DB_ADMIN_PASS'
+    'BAROTRADER_DB_ADMIN_PASS',
+    'GITHUB_ACTIONS'
 ];
 const FILE_ENV_KEYS = [
     'BAROTRADER_DB_ADMIN_PASS',
@@ -34,10 +35,10 @@ export function loadEnv() {
     const __dirname = path.dirname(__filename);
     const envPath = path.resolve(__dirname, '..', '.env');
 
-    const existingAdmin = {};
-    ADMIN_KEYS.forEach((key) => {
+    const existingValues = {};
+    PRESERVED_KEYS.forEach((key) => {
         if (Object.prototype.hasOwnProperty.call(process.env, key)) {
-            existingAdmin[key] = process.env[key];
+            existingValues[key] = process.env[key];
         }
     });
 
@@ -48,9 +49,9 @@ export function loadEnv() {
         dotenvExpand(result);
     }
 
-    ADMIN_KEYS.forEach((key) => {
-        if (Object.prototype.hasOwnProperty.call(existingAdmin, key)) {
-            process.env[key] = existingAdmin[key];
+    PRESERVED_KEYS.forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(existingValues, key)) {
+            process.env[key] = existingValues[key];
         } else {
             delete process.env[key];
         }

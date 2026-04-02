@@ -59,6 +59,7 @@ O script `01_bootstrap_roles.sh` e idempotente: ele verifica se os roles ja exis
 - `config/db.shared.js` agora respeita `DB_HOST`/`DB_PORT`, permitindo que o Compose use `db` como host interno e o resto do codigo continue funcionado.
 - `config/env.js` carrega variaveis `*_FILE` para senhas (DB, migrator, HASH_PEPPER, urls derivadas), alinhando ao padrao de secrets em ambientes reais.
 - `src/index.js` le `APP_PORT`, evitando portas hardcoded. Assim, a aplicacao se adapta tanto ao ambiente local quanto ao de producao.
+- `GITHUB_ACTIONS` controla o modo do harness de integracao. No GitHub Actions, o workflow deve exportar a assinatura de `job.services.postgres`; localmente, a ausencia de `GITHUB_ACTIONS` mantem o fallback de Docker Compose.
 
 ### Boas praticas em uso
 

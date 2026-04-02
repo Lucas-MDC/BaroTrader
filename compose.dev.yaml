@@ -24,6 +24,8 @@ services:
       APP_ENV: development
       APP_PORT: "3000"
       HASH_PEPPER: dev_hash_pepper
+      DB_HOST: db
+      DB_PORT: "5432"
       DB_BASE_ROLE: base_role_op
       DATABASE_URL: postgres://barotrader_runtime:barotrader_runtime_pass@db:5432/barotrader_db
       MIGRATIONS_DATABASE_URL: postgres://barotrader_migrator:barotrader_migrator_pass@db:5432/barotrader_db

@@ -20,7 +20,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: postgres
         ports:
-          - 5432:5432
+          - 5432
         options: >-
           --health-cmd="pg_isready -U postgres -d postgres"
           --health-interval=10s
@@ -28,8 +28,9 @@ jobs:
           --health-retries=5
 
     env:
-      HOST: localhost
-      PORT: 5432
+      BAROTRADER_GHA_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
+      BAROTRADER_GHA_POSTGRES_SERVICE_NETWORK: ${{ job.services.postgres.network }}
+      BAROTRADER_GHA_POSTGRES_SERVICE_PORT: ${{ job.services.postgres.ports[5432] }}
       BAROTRADER_DB_ADMIN_DBNAME: postgres
       BAROTRADER_DB_ADMIN_USER: postgres
       BAROTRADER_DB_ADMIN_PASS: postgres
