@@ -3,6 +3,7 @@ Development helper CLI that wraps Docker Compose tasks for the project.
 Keeps the bring-up flow consistent across environments.
 */
 
+import os from 'os';
 import { spawnSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -12,6 +13,7 @@ const projectRoot = path.resolve(
     '..'
 );
 const composeFiles = ['compose.yaml', 'compose.dev.yaml'];
+let dockerCommand;
 
 function composeArgs() {
 
@@ -20,6 +22,47 @@ function composeArgs() {
     */
 
     return composeFiles.flatMap((file) => ['-f', file]);
+}
+
+function isWsl() {
+
+    /*
+    Detect WSL to support Docker Desktop's docker.exe fallback.
+    */
+
+    return process.platform === 'linux' && /microsoft/i.test(os.release());
+}
+
+function resolveDockerCommand() {
+
+    /*
+    Resolve the Docker CLI executable across Linux, Windows, and WSL.
+    */
+
+    if (dockerCommand) {
+        return dockerCommand;
+    }
+
+    const candidates = ['docker'];
+
+    if (process.platform === 'win32' || isWsl()) {
+        candidates.push('docker.exe');
+    }
+
+    for (const candidate of candidates) {
+        const result = spawnSync(candidate, ['version'], {
+            cwd: projectRoot,
+            stdio: 'ignore'
+        });
+
+        if (!result.error) {
+            dockerCommand = candidate;
+            return dockerCommand;
+        }
+    }
+
+    dockerCommand = candidates[0];
+    return dockerCommand;
 }
 
 function run(command, args, options = {}) {
@@ -44,19 +87,55 @@ function run(command, args, options = {}) {
     }
 }
 
+function runDocker(args, options = {}) {
+
+    /*
+    Run Docker using the resolved CLI name for the current platform.
+    */
+
+    run(resolveDockerCommand(), args, options);
+}
+
 function ensureDocker() {
 
     /*
     Verify that the Docker daemon is available before running Compose.
     */
 
-    const result = spawnSync('docker', ['info'], {
+    const result = spawnSync(resolveDockerCommand(), ['info'], {
         cwd: projectRoot,
-        stdio: 'ignore'
+        encoding: 'utf8'
     });
 
+    if (result.error?.code === 'ENOENT') {
+        console.error(
+            'Docker CLI was not found in PATH. Install Docker Desktop/Engine and retry.'
+        );
+        process.exit(1);
+    }
+
+    const stderr = String(result.stderr || '').trim();
+    const stdout = String(result.stdout || '').trim();
+    const details = [stderr, stdout].filter(Boolean).join('\n');
+
     if (result.status !== 0) {
+        if (/permission denied while trying to connect to the docker api/i.test(details)) {
+            console.error(
+                'Docker CLI is installed, but this user cannot access the Docker daemon/socket.'
+            );
+            console.error(
+                'On Linux, start Docker and/or add your user to the docker group. ' +
+                'On Windows/WSL, ensure Docker Desktop is running and WSL integration is enabled.'
+            );
+            process.exit(1);
+        }
+
+        const lastDetailLine = details.split('\n').filter(Boolean).at(-1);
+
         console.error('Docker is not available. Start Docker Desktop/daemon and retry.');
+        if (lastDetailLine) {
+            console.error(lastDetailLine);
+        }
         process.exit(1);
     }
 }
@@ -102,21 +181,21 @@ switch (action) {
         if (!wantsNoBuild) {
             baseUpArgs.push('--build');
         }
-        run('docker', [...baseUpArgs, ...extraArgs.filter((arg) => arg !== '--no-build')]);
+        runDocker([...baseUpArgs, ...extraArgs.filter((arg) => arg !== '--no-build')]);
         break;
     }
     case 'down':
         ensureDocker();
-        run('docker', [...baseArgs, 'down', ...extraArgs]);
+        runDocker([...baseArgs, 'down', ...extraArgs]);
         break;
     case 'reset':
         ensureDocker();
-        run('docker', [...baseArgs, 'down', '--volumes', ...extraArgs]);
+        runDocker([...baseArgs, 'down', '--volumes', ...extraArgs]);
         break;
     case 'bootstrap':
         ensureDocker();
-        run('docker', [...baseArgs, 'up', '-d', '--wait', 'db']);
-        run('docker', [
+        runDocker([...baseArgs, 'up', '-d', '--wait', 'db']);
+        runDocker([
             ...baseArgs,
             'run',
             '--rm',

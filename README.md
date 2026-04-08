@@ -70,11 +70,11 @@ docker compose -f compose.yaml -f compose.prod.yaml up --build
 | `npm run dev:open` | Open `http://localhost:3000` |
 | `npm run lint` | Run ESLint to check code quality |
 | `npm run lint:fix` | Run ESLint and fix auto-fixable issues |
-| `npm run test` | Run all Jest projects; local integration tests may bootstrap Docker when not running in GitHub Actions |
+| `npm run test` | Run all Jest projects; DB-backed integration suites may bootstrap Docker when not running in GitHub Actions |
 | `npm run test:unit` | Run the Jest unit project |
-| `npm run test:integration` | Run the Jest integration project; local integration tests may bootstrap Docker when not running in GitHub Actions |
+| `npm run test:integration` | Run the Jest integration project; only DB-backed suites bootstrap Docker locally when needed |
 | `npm run test:integration:debug` | Run integration tests in-band (recommended for interactive DB debugging) |
-| `npm run test:coverage` | Run Jest coverage report; includes real integration tests |
+| `npm run test:coverage` | Run Jest coverage report; includes DB-backed integration tests |
 | `npm run db:migrate` | Run migrations (use `up`, `down`, `redo`, `status`) |
 | `npm run db:seed` | Run a smoke test/seed as the application user |
 
@@ -96,7 +96,6 @@ tests/
     registerClient.jsdom.test.js
     registerService.db-integration.test.js
     support/
-      globalSetup.cjs
       dbHarness.js
 ```
 
@@ -110,9 +109,9 @@ Integration test bootstrap:
 
 - `GITHUB_ACTIONS=true` switches the harness into Actions mode.
 - In that mode, the workflow must export `BAROTRADER_GHA_POSTGRES_SERVICE_ID`, `BAROTRADER_GHA_POSTGRES_SERVICE_NETWORK`, and `BAROTRADER_GHA_POSTGRES_SERVICE_PORT` from `job.services.postgres`.
-- If that signature is missing or the PostgreSQL service is not reachable, the suite fails immediately.
-- Outside GitHub Actions, the harness keeps the local Docker fallback and bootstraps Compose when no database is reachable.
-- The fallback expects Docker Desktop/Engine to be available locally.
+- If that signature is missing or the PostgreSQL service is not reachable, DB-backed suites fail immediately.
+- Outside GitHub Actions, only suites that call `dbHarness` use the local Docker fallback when no admin database is reachable.
+- Full coverage still requires Docker Desktop/Engine locally, or `BAROTRADER_DB_ADMIN_*` exported to a reachable PostgreSQL instance.
 
 PowerShell example:
 
@@ -210,7 +209,6 @@ docker/
 tests/
   integration/
     support/
-      globalSetup.cjs
       dbHarness.js
     registerApi.backend-smoke.test.js
     registerApi.http-contract.test.js

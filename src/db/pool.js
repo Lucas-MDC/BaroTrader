@@ -6,6 +6,7 @@ import pgPromise from 'pg-promise';
 import { getRuntimeDbConfig } from '../../config/index.js';
 
 const pgp = pgPromise({ capSQL: true });
+let runtimeDb = null;
 
 function wrapConnection(conn) {
 
@@ -21,9 +22,34 @@ function wrapConnection(conn) {
     };
 }
 
-/*
-Initialize the runtime connection once for application usage.
-*/
-const db = wrapConnection(pgp(getRuntimeDbConfig()));
+function getRuntimeDb() {
 
-export { db };
+    /*
+    Lazily create and return the runtime database connection.
+    */
+
+    if (!runtimeDb) {
+        runtimeDb = wrapConnection(pgp(getRuntimeDbConfig()));
+    }
+
+    return runtimeDb;
+}
+
+async function closeRuntimeDb() {
+
+    /*
+    Close the runtime database connection and clear the cache.
+    */
+
+    if (!runtimeDb) {
+        return;
+    }
+
+    await runtimeDb.close();
+    runtimeDb = null;
+}
+
+export {
+    closeRuntimeDb,
+    getRuntimeDb
+};

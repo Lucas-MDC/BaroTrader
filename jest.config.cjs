@@ -16,7 +16,6 @@ module.exports = {
     {
       ...baseConfig,
       displayName: 'integration',
-      globalSetup: '<rootDir>/tests/integration/support/globalSetup.cjs',
       testMatch: ['<rootDir>/tests/integration/**/*.test.js']
     },
     {
