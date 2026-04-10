@@ -3,3 +3,4 @@ bins/
 coverage/
 
 .env
+.codex
