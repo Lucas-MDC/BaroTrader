@@ -422,13 +422,13 @@ npm run test:integration
 
 Debugging real DB integration tests (development only):
 
-- `KEEP_DB=1`: skips teardown cleanup and keeps the test database.
+- `TEST_KEEP_DB=1`: skips teardown cleanup and keeps the test database.
 - Use serial execution (`--runInBand`) when debugging integration database state locally.
 
 PowerShell example:
 
 ```powershell
-$env:KEEP_DB='1'
+$env:TEST_KEEP_DB='1'
 npm run test:integration -- --runInBand
 ```
 
@@ -450,4 +450,3 @@ coveragePathIgnorePatterns: [
   '<rootDir>/tests/'
 ]
 ```
-

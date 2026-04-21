@@ -1,237 +1,184 @@
 # BaroTrader
 
-BaroTrader application with Express.js and PostgreSQL database.
+BaroTrader is an Express.js application with PostgreSQL, built around a
+Docker-first runtime and an explicit environment contract.
 
-## Quickstart (Docker Compose DEV)
-
-This repository is Docker-first. The supported local startup path is Docker Compose; there is no separate manual bootstrap flow documented here.
+## Quickstart
 
 Prerequisites:
 - Docker Desktop/Engine + Docker Compose v2
-- Node.js (v18+) to run npm scripts
+- Node.js 20+
 
-From a fresh clone:
+Setup:
 
 ```bash
+cp .env.example .env
+npm install
 npm run dev:up
 ```
 
-Then open `http://localhost:3000` (or run `npm run dev:open`).
+Then open `http://localhost:3000` or run `npm run dev:open`.
 
-`dev:up` builds the image, starts Postgres, bootstraps users/db on first init,
-runs migrations, and starts the app. Use `npm run dev:up -- -d` for detached.
+## Canonical environment contract
 
-### Daily commands
+The repository only supports the canonical variables below. The previous
+URL-based and alias-based contract has been removed from the public interface.
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev:up` | Build + start db/migrate/app (foreground) |
-| `npm run dev:up:bg` | Build + start the stack detached |
-| `npm run dev:down` | Stop the dev stack (keeps data) |
-| `npm run dev:reset` | Stop and remove volumes (fresh DB) |
-| `npm run dev:bootstrap` | Re-run DB bootstrap inside Docker |
-| `npm run dev:open` | Open `http://localhost:3000` |
+### Required DB/admin variables
 
-## Compose layout (DEV)
+- `BAROTRADER_DB_ADMIN_DB`
+- `BAROTRADER_DB_ADMIN_USER`
+- `BAROTRADER_DB_ADMIN_PASSWORD`
+- `RUNTIME_DB`
+- `RUNTIME_USER`
+- `RUNTIME_PASSWORD`
+- `MIGRATION_DB`
+- `MIGRATION_USER`
+- `MIGRATION_PASSWORD`
+- `TEST_DB`
+- `TEST_USER`
+- `TEST_PASSWORD`
 
-- `db`: Postgres with a named `pgdata` volume and bootstrap scripts in `docker/postgres/init`.
-- `migrate`: one-shot job that runs `npm run db:migrate -- up`.
-- `app`: Express dev server (`npm run dev`) that waits on migrations.
+### Required app variables
 
-## Configuration & secrets
+- `APP_ENV`
+- `APP_HOST`
+- `APP_PORT`
+- `DB_HOST`
+- `DB_PORT`
+- `DB_BASE_ROLE`
+- `HASH_PEPPER`
+- `REGISTER_MIN_DELAY_MS`
 
-- HTTP port uses `APP_PORT` (defaults to 3000).
-- DB config prefers `DATABASE_URL` / `MIGRATIONS_DATABASE_URL` with fallback to
-  `DB_*` / `MIGRATION_*` (`DB_HOST`/`DB_PORT` override `HOST`/`PORT`).
-- Supported `*_FILE` secrets: `DB_PASS`, `MIGRATION_PASS`,
-  `BAROTRADER_DB_ADMIN_PASS`, `DATABASE_URL`, `MIGRATIONS_DATABASE_URL`,
-  `MIGRATION_DATABASE_URL`, `HASH_PEPPER`.
+### Secrets from files
 
-## Production compose skeleton
+`config/env.js` supports `*_FILE` variants for:
 
-`compose.prod.yaml` is a structure-only template with required variables and no
-defaults. Use it as a base for prod orchestration or secret injection:
+- `BAROTRADER_DB_ADMIN_PASSWORD`
+- `RUNTIME_PASSWORD`
+- `MIGRATION_PASSWORD`
+- `TEST_PASSWORD`
+- `HASH_PEPPER`
 
-```bash
-docker compose -f compose.yaml -f compose.prod.yaml up --build
-```
+## Operational doctrine
+
+### Local Docker dev
+
+- `docker compose` is the operational authority.
+- `.env` provides local defaults.
+- Exported shell variables override `.env`.
+- `compose.dev.yaml` consumes the variables explicitly; there are no credentials
+  or URLs hardcoded in the Compose file.
+
+### GitHub Actions
+
+- The workflow is the operational authority.
+- `vars` and `secrets` feed the job and the PostgreSQL service container.
+- Tests consume the job environment; they do not bootstrap CI infrastructure by
+  discovering it dynamically.
+
+### Production
+
+- The platform or orchestrator is the operational authority.
+- `compose.prod.yaml` is a structure-only skeleton with required variables and
+  no defaults.
+- Missing required variables fail fast.
 
 ## Scripts
 
 | Script | Description |
 |--------|-------------|
-| `npm start` | Start the application |
-| `npm run dev` | Start the application in development mode with hot reload |
-| `npm run dev:up` | Build + start db/migrate/app (foreground) |
-| `npm run dev:up:bg` | Build + start the stack detached |
-| `npm run dev:down` | Stop the dev stack (keeps data) |
-| `npm run dev:reset` | Stop and remove volumes (fresh DB) |
-| `npm run dev:bootstrap` | Re-run DB bootstrap inside Docker |
-| `npm run dev:open` | Open `http://localhost:3000` |
-| `npm run lint` | Run ESLint to check code quality |
-| `npm run lint:fix` | Run ESLint and fix auto-fixable issues |
-| `npm run test` | Run all Jest projects; DB-backed integration suites may bootstrap Docker when not running in GitHub Actions |
-| `npm run test:unit` | Run the Jest unit project |
-| `npm run test:integration` | Run the Jest integration project; only DB-backed suites bootstrap Docker locally when needed |
-| `npm run test:integration:debug` | Run integration tests in-band (recommended for interactive DB debugging) |
-| `npm run test:coverage` | Run Jest coverage report; includes DB-backed integration tests |
-| `npm run db:migrate` | Run migrations (use `up`, `down`, `redo`, `status`) |
-| `npm run db:seed` | Run a smoke test/seed as the application user |
+| `npm start` | Start the application using the canonical runtime env contract |
+| `npm run dev` | Start the application with `node --watch` |
+| `npm run dev:up` | Build and start `db`, `migrate`, and `app` |
+| `npm run dev:up:bg` | Start the dev stack detached |
+| `npm run dev:down` | Stop the dev stack and keep volumes |
+| `npm run dev:reset` | Stop the dev stack and remove volumes |
+| `npm run dev:bootstrap` | Re-run provisioning against the current dev DB |
+| `npm run dev:open` | Open the local app URL |
+| `npm run lint` | Run ESLint |
+| `npm run validate:env:runtime` | Validate the canonical runtime contract |
+| `npm run validate:env:test` | Validate the canonical test contract |
+| `npm test` | Run unit + integration tests; local DB base is prepared automatically |
+| `npm run test:unit` | Run unit tests only |
+| `npm run test:integration` | Run integration tests with automatic local DB base setup |
+| `npm run test:integration:debug` | Run integration tests in-band |
+| `npm run test:coverage` | Run coverage with the same automatic test-base orchestration |
+| `npm run db:setup` | Create runtime/migrator roles and application DB using `BAROTRADER_DB_ADMIN_*` |
+| `npm run db:migrate` | Run migrations using `MIGRATION_*` |
+| `npm run db:seed` | Run a smoke/seed flow as the runtime user |
+| `npm run db:cleanup` | Drop DB/users/role with explicit destructive confirmation |
 
 ## Testing
 
-Current test folders:
+DB-backed integration tests use the following model:
 
-```text
-tests/
-  unity/
-    branchProtectionGuard.test.js
-    passwordService.test.js
-    registerClient.test.js
-    registerService.test.js
-    registerUtils.test.js
-  integration/
-    registerApi.backend-smoke.test.js
-    registerApi.http-contract.test.js
-    registerClient.jsdom.test.js
-    registerService.db-integration.test.js
-    support/
-      dbHarness.js
-```
+- Local: `scripts/test.js` brings up `compose.test.yaml`, points the process to
+  `127.0.0.1:55432`, validates the test contract, runs Jest, and tears the base
+  stack down afterward.
+- CI: GitHub Actions provides `services: postgres`; the same test command
+  consumes that base and does not attempt to preserve anything.
+- Harness: `tests/integration/support/dbHarness.js` uses `TEST_*` as the admin
+  connection, then provisions `RUNTIME_*` and `MIGRATION_*`, applies migrations,
+  and cleans up the logical test environment.
 
-Integration DB debugging flags:
+### Local debugging
 
-- `KEEP_DB=1`: skip test database cleanup in teardown.
-
-This flag is intended for local development/debug sessions. Keep it disabled in GitHub Actions/homolog/deploy to keep tests fully automatic and fast.
-
-Integration test bootstrap:
-
-- `GITHUB_ACTIONS=true` switches the harness into Actions mode.
-- In that mode, the workflow must export `BAROTRADER_GHA_POSTGRES_SERVICE_ID`, `BAROTRADER_GHA_POSTGRES_SERVICE_NETWORK`, and `BAROTRADER_GHA_POSTGRES_SERVICE_PORT` from `job.services.postgres`.
-- If that signature is missing or the PostgreSQL service is not reachable, DB-backed suites fail immediately.
-- Outside GitHub Actions, only suites that call `dbHarness` use the local Docker fallback when no admin database is reachable.
-- Full coverage still requires Docker Desktop/Engine locally, or `BAROTRADER_DB_ADMIN_*` exported to a reachable PostgreSQL instance.
+- `TEST_KEEP_DB=1` preserves both the logical test database and the local test
+  PostgreSQL base after the run.
+- This flag is local-only. In GitHub Actions it is ignored.
 
 PowerShell example:
 
 ```powershell
-$env:KEEP_DB='1'
+$env:TEST_KEEP_DB='1'
 npm run test:integration:debug
 ```
 
-## Migrations
+## Database safety
 
-Migrations are SQL-first and executed via node-pg-migrate. For details on how to
-create, run, and check migration state, see `docs/migrations.md`.
+Destructive tooling is intentionally separate from the normal runtime/test path.
+`npm run db:cleanup` requires:
 
-For lifecycle guidance (setup, cleanup, branching, and safety gates), see
-`docs/db-lifecycle.md`.
+- `APP_ENV=development` or `APP_ENV=test`
+- `DB_ALLOW_DESTRUCTIVE=YES`
+- `DB_DESTRUCTIVE_CONFIRM` matching the target runtime database exactly
 
-## Project Structure
+For the normal local Docker-first path, a full reset is `npm run dev:reset`, not
+`db:cleanup`.
 
-```
+## Project structure
+
+```text
 config/
-  db.admin.js              # Admin DB config (env)
-  db.migrations.js         # Migrations DB config (env)
-  db.runtime.js            # Runtime DB config (env)
-  db.shared.js             # Shared DB config helpers
-  env.js                   # Environment loading and expansion
-  index.js                 # Config entrypoints
-  security.js              # Hash config
+  app.js
+  db.admin.js
+  db.migrations.js
+  db.runtime.js
+  db.shared.js
+  db.test.js
+  env.js
+  index.js
+  security.js
 db/
   engine/
-    main.js                # DB setup/migrate/seed/cleanup CLI
-    migrate.js             # node-pg-migrate runner + loader export
-    migration_sql.cjs      # SQL loader for migrations
-    pool.js                # Tooling pg-promise pools (admin/migrator/runtime)
-    safety.js              # Destructive command guardrails
-    seed/
-      runAs.js             # Seed helpers executed with the app user
-    setup/
-      cleanup.js           # DB/user cleanup helpers
-      database.js          # DB/user provisioning helpers
-  sql/
-    index.js               # SQL loader entrypoint
-    infra/
-      database/            # Bootstrap/cleanup SQL for DB lifecycle
-      roles/               # Role management SQL
-      seed/                # Seed SQL
-      users/               # User management SQL
-    migrations/            # SQL-first migrations (DDL changes)
-    runtime/
-      user/                # Runtime user queries
   migrations/
-    001_init_users.js
-    002_migrator_privileges.js
-    003_base_role_permissions.js
-    004_add_password_salt.js
-    package.json
-src/
-  app.js                   # Express app factory (middlewares + routes)
-  index.js                 # Runtime server entry point (listen)
-  routes.js                # Route wiring
-  db/
-    pool.js                # Runtime pg-promise pool
-  models/
-    user/
-      index.js             # Public API for user model
-      userModel.js         # User data access using runtime pool
-  private/
-    assets/
-    pages/
-  public/
-    assets/
-    pages/
-  services/
-    register/
-      passwordService.js
-      register.js
-      registerService.js
-      sleep.js
-    services.js
-  shared/
-    css/
-      style.css
-    js/
-      utils.js
-  utils/
-    databaseWrappers/
-      postgresql_wrapper.js
-scripts/
-  dev.js                   # Docker Compose helper CLI
+  sql/
 docker/
   node/
-    entrypoint-dev.sh
   postgres/
-    init/
-      01_bootstrap_roles.sh
+scripts/
+  dev.js
+  test.js
+  validate-env.js
 tests/
   integration/
-    support/
-      dbHarness.js
-    registerApi.backend-smoke.test.js
-    registerApi.http-contract.test.js
-    registerClient.jsdom.test.js
-    registerService.db-integration.test.js
   unity/
-    branchProtectionGuard.test.js
-    passwordService.test.js
-    registerClient.test.js
-    registerService.test.js
-    registerUtils.test.js
-docs/
-  db-architecture.md       # DB setup, roles, pooling and SQL layout
-  db-lifecycle.md          # DB lifecycle, safety gates, use cases
-  migrations.md            # How to create/run/check migrations
-  devops.md                # Docker Compose/devops tutorial for bring-up
-  plans/                   # Test plans and feature-level coverage map
 ```
 
-## License
+## Additional docs
 
-ISC
-
-## DevOps walkthrough
-
-Leitura focada em quem está começando com Docker Compose e quer entender a automação de um ambiente dev/devops moderno: veja `docs/devops.md`.
+- `docs/devops.md`: local Docker and CI operational model
+- `docs/db-architecture.md`: config, roles, pools, and provisioning flow
+- `docs/db-lifecycle.md`: provisioning, cleanup, and safe reset guidance
+- `docs/migrations.md`: migration workflow and supported flags

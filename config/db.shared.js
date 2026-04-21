@@ -1,55 +1,8 @@
 /*
-Shared database configuration helpers for parsing URLs and defaults.
+Shared database configuration helpers for canonical env contracts.
 */
 
 import { loadEnv } from './env.js';
-
-export function parseDatabaseUrl(databaseUrl) {
-    /*
-    Parse a Postgres connection URL into a config object.
-    */
-    if (!databaseUrl) return null;
-
-    const parsed = new URL(databaseUrl);
-    const database = parsed.pathname ? parsed.pathname.replace(/^\//, '') : '';
-
-    return {
-        host: parsed.hostname,
-        port: Number(parsed.port || 5432),
-        database,
-        user: decodeURIComponent(parsed.username || ''),
-        password: decodeURIComponent(parsed.password || '')
-    };
-}
-
-export function buildDatabaseUrl({ host, port, database, user, password }) {
-    /*
-    Build a Postgres connection URL from a config object.
-    */
-    if (!host || !port || !database || !user) return null;
-
-    const encodedUser = encodeURIComponent(user);
-    const hasPassword = password !== undefined && password !== null && password !== '';
-    const encodedPassword = hasPassword ? encodeURIComponent(password) : '';
-    const auth = hasPassword ? `${encodedUser}:${encodedPassword}` : encodedUser;
-
-    return `postgres://${auth}@${host}:${port}/${database}`;
-}
-
-export function getBaseConnectionConfig() {
-    /*
-    Resolve the base connection settings shared across DB configs.
-    */
-    loadEnv();
-
-    const host = process.env.DB_HOST || process.env.HOST || 'localhost';
-    const portValue = process.env.DB_PORT || process.env.PGPORT || process.env.PORT;
-
-    return {
-        host,
-        port: Number(portValue || 5432)
-    };
-}
 
 export function assertRequired(value, label) {
     /*
@@ -60,4 +13,63 @@ export function assertRequired(value, label) {
     }
 
     return value;
+}
+
+export function parsePort(value, label = 'DB_PORT') {
+    /*
+    Parse and validate a database port from the environment.
+    */
+    const port = Number.parseInt(String(value || ''), 10);
+    if (!Number.isInteger(port) || port <= 0) {
+        throw new Error(`${label} must be a positive integer.`);
+    }
+
+    return port;
+}
+
+export function getBaseConnectionConfig() {
+    /*
+    Resolve the shared database host and port used by all DB clients.
+    */
+    loadEnv();
+
+    return {
+        host: assertRequired(process.env.DB_HOST, 'DB_HOST'),
+        port: parsePort(process.env.DB_PORT, 'DB_PORT')
+    };
+}
+
+export function buildConnectionString({ host, port, database, user, password }) {
+    /*
+    Build an internal PostgreSQL connection string when a library requires it.
+    */
+    const encodedUser = encodeURIComponent(assertRequired(user, 'Database user'));
+    const encodedPassword = encodeURIComponent(
+        assertRequired(password, 'Database password')
+    );
+    const encodedDatabase = encodeURIComponent(
+        assertRequired(database, 'Database name')
+    );
+
+    return `postgres://${encodedUser}:${encodedPassword}@${assertRequired(host, 'DB_HOST')}:${parsePort(
+        port,
+        'DB_PORT'
+    )}/${encodedDatabase}`;
+}
+
+export function validateDbConfig(config, label) {
+    /*
+    Ensure a DB config object exposes the minimum fields needed by clients.
+    */
+    if (!config) {
+        throw new Error(`${label} is required.`);
+    }
+
+    assertRequired(config.host, `${label} host`);
+    parsePort(config.port, `${label} port`);
+    assertRequired(config.database, `${label} database`);
+    assertRequired(config.user, `${label} user`);
+    assertRequired(config.password, `${label} password`);
+
+    return config;
 }

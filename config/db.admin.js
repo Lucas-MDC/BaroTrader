@@ -1,40 +1,44 @@
 /*
-Admin database configuration helpers for setup/cleanup tooling.
-Builds connection settings from environment variables and exposes the base role name.
+Admin database configuration helpers for provisioning tooling.
 */
 
 import { loadEnv } from './env.js';
-import { assertRequired, getBaseConnectionConfig } from './db.shared.js';
+import {
+    assertRequired,
+    getBaseConnectionConfig,
+    validateDbConfig
+} from './db.shared.js';
 
 export function getAdminDbConfig() {
     /*
-    Load env and build the admin connection config from BAROTRADER_DB_ADMIN_* values.
+    Resolve the DB admin connection used for runtime/prod provisioning tooling.
     */
     loadEnv();
 
-    const base = getBaseConnectionConfig();
-    const database = assertRequired(
-        process.env.BAROTRADER_DB_ADMIN_DBNAME,
-        'Admin database name (BAROTRADER_DB_ADMIN_DBNAME) must be set in the environment'
+    return validateDbConfig(
+        {
+            ...getBaseConnectionConfig(),
+            database: assertRequired(
+                process.env.BAROTRADER_DB_ADMIN_DB,
+                'BAROTRADER_DB_ADMIN_DB'
+            ),
+            user: assertRequired(
+                process.env.BAROTRADER_DB_ADMIN_USER,
+                'BAROTRADER_DB_ADMIN_USER'
+            ),
+            password: assertRequired(
+                process.env.BAROTRADER_DB_ADMIN_PASSWORD,
+                'BAROTRADER_DB_ADMIN_PASSWORD'
+            )
+        },
+        'Admin database config'
     );
-    const user = assertRequired(
-        process.env.BAROTRADER_DB_ADMIN_USER,
-        'Admin user (BAROTRADER_DB_ADMIN_USER) must be set in the environment'
-    );
-    const password = process.env.BAROTRADER_DB_ADMIN_PASS || '';
-
-    return {
-        ...base,
-        database,
-        user,
-        password
-    };
 }
 
 export function getBaseRole() {
     /*
-    Resolve the base role name used for database infrastructure setup.
+    Resolve the base role name used for grants and cleanup.
     */
     loadEnv();
-    return process.env.DB_BASE_ROLE || 'base_role_op';
+    return assertRequired(process.env.DB_BASE_ROLE, 'DB_BASE_ROLE');
 }

@@ -37,27 +37,30 @@ function requireUserConfig(config, label) {
     return config;
 }
 
-async function ensureDatabaseUser() {
+async function ensureDatabaseUser({ adminDb = getAdminDb() } = {}) {
     /*
     Ensure the application login exists so runtime connections can be created.
     */
 
     console.log('||| [Setup] Step 1 - Ensuring application login exists |||');
 
-    const adminDb = getAdminDb();
     const userConfig = requireUserConfig(getRuntimeDbConfig(), 'Application user config');
     const roleCheck = await adminDb.query(
         sql.infra.users.checkExists,
         { user: userConfig.user }
     );
 
-    if (roleCheck && roleCheck.length > 0) {
-        console.log(`USER ${userConfig.user} already exists`);
-        return;
-    }
-
     if (userConfig.password == null) {
         throw new Error('Application user password is required to create the login.');
+    }
+
+    if (roleCheck && roleCheck.length > 0) {
+        await adminDb.execute(
+            sql.infra.users.alterPassword,
+            { user: userConfig.user, password: userConfig.password }
+        );
+        console.log(`USER ${userConfig.user} password reconciled`);
+        return;
     }
 
     await adminDb.execute(
@@ -67,7 +70,10 @@ async function ensureDatabaseUser() {
     console.log(`USER ${userConfig.user} created`);
 }
 
-async function ensureMigratorUser() {
+async function ensureMigratorUser({
+    adminDb = getAdminDb(),
+    adminUser = process.env.BAROTRADER_DB_ADMIN_USER || null
+} = {}) {
     /*
     Ensure the migrator login exists; this role owns the schema and
     is used by migrations to apply DDL.
@@ -75,38 +81,40 @@ async function ensureMigratorUser() {
 
     console.log('||| [Setup] Step 2 - Ensuring migrator login exists |||');
 
-    const adminDb = getAdminDb();
     const migratorConfig = requireUserConfig(
         getMigrationsDbConfig(),
-        'Migrator config (MIGRATIONS_DATABASE_URL/MIGRATION_*)'
+        'Migrator config (MIGRATION_*)'
     );
     const runtimeConfig = requireUserConfig(
         getRuntimeDbConfig(),
-        'Runtime config (DATABASE_URL/DB_*)'
+        'Runtime config (RUNTIME_*)'
     );
 
-    const adminUser = process.env.BAROTRADER_DB_ADMIN_USER;
     if (adminUser && migratorConfig.user === adminUser) {
         throw new Error(
-            'Migrator user must be distinct from admin user (BAROTRADER_DB_ADMIN_USER).'
+            'Migrator user must be distinct from the admin user.'
         );
     }
 
     if (runtimeConfig.user === migratorConfig.user) {
-        throw new Error('Migrator user must be distinct from runtime user (DB_USER).');
+        throw new Error('Migrator user must be distinct from runtime user (RUNTIME_USER).');
     }
     const roleCheck = await adminDb.query(
         sql.infra.users.checkExists,
         { user: migratorConfig.user }
     );
 
-    if (roleCheck && roleCheck.length > 0) {
-        console.log(`USER ${migratorConfig.user} already exists`);
-    } else {
-        if (migratorConfig.password == null) {
-            throw new Error('Migrator password is required to create the login.');
-        }
+    if (migratorConfig.password == null) {
+        throw new Error('Migrator password is required to create the login.');
+    }
 
+    if (roleCheck && roleCheck.length > 0) {
+        await adminDb.execute(
+            sql.infra.users.alterPassword,
+            { user: migratorConfig.user, password: migratorConfig.password }
+        );
+        console.log(`USER ${migratorConfig.user} password reconciled`);
+    } else {
         await adminDb.execute(
             sql.infra.users.create,
             { user: migratorConfig.user, password: migratorConfig.password }
@@ -128,7 +136,7 @@ async function ensureMigratorUser() {
     }
 }
 
-async function ensureDatabase() {
+async function ensureDatabase({ adminDb = getAdminDb() } = {}) {
     /*
     Ensure the application database exists, owned by the login created
     previously so subsequent provisioning can run inside it.
@@ -136,7 +144,6 @@ async function ensureDatabase() {
 
     console.log('||| [Setup] Step 3 - Ensuring application database exists |||');
 
-    const adminDb = getAdminDb();
     const databaseName = resolveDatabaseName();
     const migratorConfig = getMigrationsDbConfig();
 
@@ -146,7 +153,14 @@ async function ensureDatabase() {
     );
 
     if (dbCheck && dbCheck.length > 0) {
-        console.log(`DATABASE ${databaseName} already exists`);
+        await adminDb.execute(
+            sql.infra.database.alterOwner,
+            {
+                owner: migratorConfig.user,
+                database: databaseName
+            }
+        );
+        console.log(`DATABASE ${databaseName} owner reconciled`);
         return;
     }
 

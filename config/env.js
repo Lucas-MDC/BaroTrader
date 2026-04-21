@@ -1,5 +1,5 @@
 /*
-Environment loader that reads .env once and preserves admin overrides.
+Environment loader that reads .env once using canonical env names.
 */
 
 import fs from 'fs';
@@ -9,25 +9,17 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 let loaded = false;
-const PRESERVED_KEYS = [
-    'BAROTRADER_DB_ADMIN_DBNAME',
-    'BAROTRADER_DB_ADMIN_USER',
-    'BAROTRADER_DB_ADMIN_PASS',
-    'GITHUB_ACTIONS'
-];
 const FILE_ENV_KEYS = [
-    'BAROTRADER_DB_ADMIN_PASS',
-    'DB_PASS',
-    'MIGRATION_PASS',
-    'DATABASE_URL',
-    'MIGRATIONS_DATABASE_URL',
-    'MIGRATION_DATABASE_URL',
+    'BAROTRADER_DB_ADMIN_PASSWORD',
+    'MIGRATION_PASSWORD',
+    'RUNTIME_PASSWORD',
+    'TEST_PASSWORD',
     'HASH_PEPPER'
 ];
 
 export function loadEnv() {
     /*
-    Load .env (with variable expansion) a single time and keep admin env overrides.
+    Load .env (with variable expansion) once without overriding exported vars.
     */
     if (loaded) return;
 
@@ -35,27 +27,12 @@ export function loadEnv() {
     const __dirname = path.dirname(__filename);
     const envPath = path.resolve(__dirname, '..', '.env');
 
-    const existingValues = {};
-    PRESERVED_KEYS.forEach((key) => {
-        if (Object.prototype.hasOwnProperty.call(process.env, key)) {
-            existingValues[key] = process.env[key];
-        }
-    });
-
-    const result = dotenv.config({ path: envPath });
+    const result = dotenv.config({ path: envPath, quiet: true });
     if (typeof dotenvExpand.expand === 'function') {
         dotenvExpand.expand(result);
     } else if (typeof dotenvExpand === 'function') {
         dotenvExpand(result);
     }
-
-    PRESERVED_KEYS.forEach((key) => {
-        if (Object.prototype.hasOwnProperty.call(existingValues, key)) {
-            process.env[key] = existingValues[key];
-        } else {
-            delete process.env[key];
-        }
-    });
 
     FILE_ENV_KEYS.forEach((key) => {
         if (process.env[key]) return;

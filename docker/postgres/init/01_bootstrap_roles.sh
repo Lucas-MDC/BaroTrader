@@ -37,20 +37,26 @@ read_secret() {
     printf '%s' "$value"
 }
 
-DB_DBNAME="$(require_env DB_DBNAME)"
-DB_USER="$(require_env DB_USER)"
+RUNTIME_DB="$(require_env RUNTIME_DB)"
+RUNTIME_USER="$(require_env RUNTIME_USER)"
 MIGRATION_USER="$(require_env MIGRATION_USER)"
-DB_PASS="$(read_secret DB_PASS)"
-MIGRATION_PASS="$(read_secret MIGRATION_PASS)"
+MIGRATION_DB="$(require_env MIGRATION_DB)"
+RUNTIME_PASSWORD="$(read_secret RUNTIME_PASSWORD)"
+MIGRATION_PASSWORD="$(read_secret MIGRATION_PASSWORD)"
+
+if [ "$RUNTIME_DB" != "$MIGRATION_DB" ]; then
+    echo "RUNTIME_DB and MIGRATION_DB must match." >&2
+    exit 1
+fi
 
 echo "Bootstrapping BaroTrader roles and database..."
 
 psql -v ON_ERROR_STOP=1 \
-    -v runtime_user="$DB_USER" \
-    -v runtime_pass="$DB_PASS" \
+    -v runtime_user="$RUNTIME_USER" \
+    -v runtime_pass="$RUNTIME_PASSWORD" \
     -v migrator_user="$MIGRATION_USER" \
-    -v migrator_pass="$MIGRATION_PASS" \
-    -v app_db="$DB_DBNAME" \
+    -v migrator_pass="$MIGRATION_PASSWORD" \
+    -v app_db="$RUNTIME_DB" \
     --username "$POSTGRES_USER" \
     --dbname "$POSTGRES_DB" <<'EOSQL'
 SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', :'runtime_user', :'runtime_pass')

@@ -18,9 +18,9 @@ function resolveDatabaseName() {
     Resolve the single database name shared by runtime and migrator configs.
     */
     const runtimeConfig = getRuntimeDbConfig();
-    const migratorConfig = getMigrationsDbConfig({ required: false });
+    const migratorConfig = getMigrationsDbConfig();
 
-    if (migratorConfig && migratorConfig.database !== runtimeConfig.database) {
+    if (migratorConfig.database !== runtimeConfig.database) {
         throw new Error(
             'Runtime and migrator configs must point to the same database.'
         );
@@ -29,14 +29,13 @@ function resolveDatabaseName() {
     return runtimeConfig.database;
 }
 
-async function cleanup() {
+async function cleanup({ adminDb = getAdminDb() } = {}) {
     /*
     Drop the database, users, and role created during setup.
     */
 
-    const adminDb = getAdminDb();
     const runtimeConfig = getRuntimeDbConfig();
-    const migratorConfig = getMigrationsDbConfig({ required: false });
+    const migratorConfig = getMigrationsDbConfig();
     const databaseName = resolveDatabaseName();
 
     assertDestructiveAllowed({ targetDatabase: databaseName });
@@ -57,7 +56,7 @@ async function cleanup() {
         console.log(`User ${runtimeConfig.user} dropped.`);
     }
 
-    if (migratorConfig?.user) {
+    if (migratorConfig.user) {
         await adminDb.execute(
             sql.infra.users.drop,
             { user: migratorConfig.user }

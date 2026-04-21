@@ -16,27 +16,35 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
+          POSTGRES_USER: ${{ vars.TEST_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+          POSTGRES_DB: ${{ vars.TEST_DB }}
         ports:
-          - 5432
+          - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U postgres -d postgres"
+          --health-cmd="pg_isready -U ${{ vars.TEST_USER }} -d ${{ vars.TEST_DB }}"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
 
     env:
-      BAROTRADER_GHA_POSTGRES_SERVICE_ID: ${{ job.services.postgres.id }}
-      BAROTRADER_GHA_POSTGRES_SERVICE_NETWORK: ${{ job.services.postgres.network }}
-      BAROTRADER_GHA_POSTGRES_SERVICE_PORT: ${{ job.services.postgres.ports[5432] }}
-      BAROTRADER_DB_ADMIN_DBNAME: postgres
-      BAROTRADER_DB_ADMIN_USER: postgres
-      BAROTRADER_DB_ADMIN_PASS: postgres
-      HASH_PEPPER: ci-pepper
-      REGISTER_MIN_DELAY_MS: 0
-      KEEP_DB: 0
+      APP_ENV: ${{ vars.APP_ENV }}
+      APP_HOST: ${{ vars.APP_HOST }}
+      APP_PORT: ${{ vars.APP_PORT }}
+      DB_HOST: ${{ vars.DB_HOST }}
+      DB_PORT: ${{ vars.DB_PORT }}
+      DB_BASE_ROLE: ${{ vars.DB_BASE_ROLE }}
+      HASH_PEPPER: ${{ secrets.HASH_PEPPER }}
+      REGISTER_MIN_DELAY_MS: ${{ vars.REGISTER_MIN_DELAY_MS }}
+      TEST_DB: ${{ vars.TEST_DB }}
+      TEST_USER: ${{ vars.TEST_USER }}
+      TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+      RUNTIME_DB: ${{ vars.RUNTIME_DB }}
+      RUNTIME_USER: ${{ vars.RUNTIME_USER }}
+      RUNTIME_PASSWORD: ${{ secrets.RUNTIME_PASSWORD }}
+      MIGRATION_DB: ${{ vars.MIGRATION_DB }}
+      MIGRATION_USER: ${{ vars.MIGRATION_USER }}
+      MIGRATION_PASSWORD: ${{ secrets.MIGRATION_PASSWORD }}
 
     steps:
       - name: Checkout
@@ -50,6 +58,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Validate test environment
+        run: npm run validate:env:test
 
       - name: Lint
         run: npm run lint

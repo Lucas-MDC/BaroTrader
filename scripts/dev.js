@@ -7,6 +7,7 @@ import os from 'os';
 import { spawnSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { getAppConfig } from '../config/index.js';
 
 const projectRoot = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
@@ -195,22 +196,10 @@ switch (action) {
     case 'bootstrap':
         ensureDocker();
         runDocker([...baseArgs, 'up', '-d', '--wait', 'db']);
-        runDocker([
-            ...baseArgs,
-            'run',
-            '--rm',
-            '-e',
-            'DB_HOST=db',
-            '-e',
-            'DB_PORT=5432',
-            'migrate',
-            'npm',
-            'run',
-            'db:setup'
-        ]);
+        runDocker([...baseArgs, 'run', '--rm', 'migrate', 'npm', 'run', 'db:setup']);
         break;
     case 'open': {
-        const port = process.env.APP_PORT || '3000';
+        const { port } = getAppConfig();
         openBrowser(`http://localhost:${port}`);
         break;
     }

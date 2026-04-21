@@ -731,8 +731,8 @@ Conditions:
 #### CFG-UNIT-007: getBaseConnectionConfig defaults
 Source: Added
 Conditions:
-- HOST defaults to localhost when missing.
-- PORT defaults to 5432 when missing.
+- `DB_HOST` is required and returned unchanged.
+- `DB_PORT` is required and parsed as a positive integer.
 
 <a id="cfg-unit-008"></a>
 #### CFG-UNIT-008: assertRequired behavior
@@ -742,46 +742,44 @@ Conditions:
 - Non-empty values are returned unchanged.
 
 <a id="cfg-unit-009"></a>
-#### CFG-UNIT-009: getRuntimeDbConfig from DATABASE_URL
+#### CFG-UNIT-009: getRuntimeDbConfig from canonical runtime env
 Source: Added
 Conditions:
-- DATABASE_URL is parsed and returned when set.
-- Missing database or user in the parsed URL throws.
+- `RUNTIME_DB`, `RUNTIME_USER`, and `RUNTIME_PASSWORD` are required.
+- `DB_HOST` and `DB_PORT` are required shared inputs.
 
 <a id="cfg-unit-010"></a>
-#### CFG-UNIT-010: getRuntimeDbConfig from DB_*
+#### CFG-UNIT-010: getRuntimeDbConfig rejects incomplete runtime env
 Source: Added
 Conditions:
-- DB_DBNAME and DB_USER build a derived DATABASE_URL when missing.
-- process.env.DATABASE_URL is set when derived.
-- Missing DB_DBNAME or DB_USER throws.
+- Missing `RUNTIME_DB`, `RUNTIME_USER`, or `RUNTIME_PASSWORD` throws.
+- Missing `DB_HOST` or `DB_PORT` throws.
 
 <a id="cfg-unit-011"></a>
-#### CFG-UNIT-011: getMigrationsDbConfig from URL
+#### CFG-UNIT-011: getMigrationsDbConfig from canonical migration env
 Source: Added
 Conditions:
-- MIGRATIONS_DATABASE_URL or MIGRATION_DATABASE_URL is parsed when set.
-- Missing database or user in the parsed URL throws.
+- `MIGRATION_DB`, `MIGRATION_USER`, and `MIGRATION_PASSWORD` are required.
+- `DB_HOST` and `DB_PORT` are required shared inputs.
 
 <a id="cfg-unit-012"></a>
-#### CFG-UNIT-012: getMigrationsDbConfig required=false
+#### CFG-UNIT-012: getMigrationsDbConfig rejects incomplete migration env
 Source: Added
 Conditions:
-- When required=false and no config is available, null is returned.
+- Missing `MIGRATION_DB`, `MIGRATION_USER`, or `MIGRATION_PASSWORD` throws.
 
 <a id="cfg-unit-013"></a>
 #### CFG-UNIT-013: getMigrationsDbConfig from MIGRATION_*
 Source: Added
 Conditions:
-- MIGRATION_DB defaults to DB_DBNAME when missing.
-- MIGRATIONS_DATABASE_URL is derived and set when possible.
+- `MIGRATION_DB` no longer falls back to any runtime alias.
+- No migration URL is derived as public contract state.
 
 <a id="cfg-unit-014"></a>
 #### CFG-UNIT-014: getAdminDbConfig requirements
 Source: Added
 Conditions:
-- BAROTRADER_DB_ADMIN_DBNAME and BAROTRADER_DB_ADMIN_USER are required.
-- BAROTRADER_DB_ADMIN_PASS defaults to an empty string.
+- `BAROTRADER_DB_ADMIN_DB`, `BAROTRADER_DB_ADMIN_USER`, and `BAROTRADER_DB_ADMIN_PASSWORD` are required.
 
 <a id="cfg-unit-015"></a>
 #### CFG-UNIT-015: getBaseRole default
@@ -1189,9 +1187,9 @@ Conditions:
 #### MIG-INT-002: runMigrations argument sanitization
 Source: Added
 Conditions:
-- --migrations-dir, --database-url-var, and --envPath args are stripped.
-- MIGRATIONS_DATABASE_URL is used as the database url var.
-- .env is passed when present.
+- Unsupported CLI-only flags are rejected in programmatic mode.
+- The runner uses the canonical `MIGRATION_*` contract through object-based config.
+- Supported flags are translated into node-pg-migrate runner options.
 
 <a id="mig-int-003"></a>
 #### MIG-INT-003: printMigrationStatus without pgmigrations table
@@ -1223,8 +1221,8 @@ Conditions:
 #### MIG-INT-007: migration wrapper env resolution
 Source: Added
 Conditions:
-- Missing MIGRATIONS_DATABASE_URL/MIGRATION_USER causes migrator grants to fail.
-- Missing DATABASE_URL/DB_USER causes base role grants to fail.
+- Missing `MIGRATION_USER` causes migrator grants to fail.
+- Missing `RUNTIME_USER` causes base role grants to fail.
 
 <a id="migrations-contract"></a>
 ### Contract
@@ -1365,4 +1363,3 @@ Source: Added
 Conditions:
 - Known extensions map to expected MIME types.
 - Unknown extensions return application/octet-stream.
-
