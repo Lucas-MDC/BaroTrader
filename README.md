@@ -73,7 +73,9 @@ URL-based and alias-based contract has been removed from the public interface.
 ### GitHub Actions
 
 - The workflow is the operational authority.
-- `vars` and `secrets` feed the job and the PostgreSQL service container.
+- Temporarily, repository `secrets` feed the job and the PostgreSQL service
+  container; workflow comments mark values that should move back to variables or
+  environment-scoped configuration.
 - Tests consume the job environment; they do not bootstrap CI infrastructure by
   discovering it dynamically.
 

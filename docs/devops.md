@@ -60,7 +60,9 @@ That flag is intended only for local debugging.
 
 CI uses `services: postgres` as the infrastructure authority:
 
-- the workflow injects the canonical variables from GitHub `vars` and `secrets`;
+- the workflow temporarily injects the canonical variables from GitHub
+  repository `secrets`; comments in the workflow mark the intended non-secret or
+  environment-scoped destinations;
 - the PostgreSQL service is created by the workflow itself;
 - `npm run validate:env:test` checks the contract before tests;
 - `npm test` consumes the CI-provided PostgreSQL base and does not try to
