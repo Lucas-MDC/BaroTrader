@@ -26,6 +26,7 @@ const sql = {
         database: {
             checkExists: qf('./infra/database/check_db.sql'),
             create: qf('./infra/database/create_db.sql'),
+            alterOwner: qf('./infra/database/alter_db_owner.sql'),
             drop: qf('./infra/database/clean_db.sql')
         },
         roles: {
@@ -35,6 +36,7 @@ const sql = {
             checkExists: qf('./infra/users/check_user.sql'),
             checkCreateRole: qf('./infra/users/check_createrole.sql'),
             create: qf('./infra/users/create_user.sql'),
+            alterPassword: qf('./infra/users/alter_user_password.sql'),
             grantCreateRole: qf('./infra/users/grant_createrole.sql'),
             drop: qf('./infra/users/clean_db_user.sql')
         },

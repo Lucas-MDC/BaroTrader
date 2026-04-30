@@ -1,68 +1,76 @@
 # Database lifecycle
 
-This document describes how to provision, migrate, reset, and operate the DB
-across local development and managed environments.
+This document describes how the repository provisions, migrates, resets, and
+destroys PostgreSQL environments under the new contract.
 
 ## Safety gates
-Cleanup is blocked by default. To run destructive commands (like `db:cleanup`),
-all of the following must be true:
-- `APP_ENV` (or `NODE_ENV`) is `development` or `test`.
-- `DB_ALLOW_DESTRUCTIVE=YES`.
-- `DB_DESTRUCTIVE_CONFIRM` matches the target database name exactly.
 
-The cleanup script prints the target database name before validating the
-confirmation value.
+`npm run db:cleanup` is blocked unless all of the following are true:
 
-## Manual today (no IaC/CI)
-### Cluster-level provisioning
-These steps require a DBMS sysadmin account:
-- Obtain or create sysadmin credentials for the PostgreSQL instance.
-- Export `BAROTRADER_DB_ADMIN_DBNAME`, `BAROTRADER_DB_ADMIN_USER`, and `BAROTRADER_DB_ADMIN_PASS` in your shell/CI.
-- Use `npm run db:setup` in dev/test to create the database and runtime/migrator logins.
+- `APP_ENV` is `development` or `test`
+- `DB_ALLOW_DESTRUCTIVE=YES`
+- `DB_DESTRUCTIVE_CONFIRM` matches `RUNTIME_DB` exactly
 
-### Repo-managed automation
-These steps are handled by the repository tooling:
-- `npm run db:migrate up` applies schema + grants using `MIGRATIONS_DATABASE_URL` (can be derived from `MIGRATION_*`).
-- `npm run db:seed` performs a smoke test as the runtime user.
+These gates are for manual/destructive tooling only. They are not part of the
+normal Docker-first dev path or the normal CI path.
 
-## Automatic later (GitHub Actions / IaC)
-These responsibilities move to the pipeline:
-- Provision database and roles in managed environments (IaC).
-- Run `node-pg-migrate up` using `--database-url-var MIGRATIONS_DATABASE_URL`.
-- (Optional) run `npm run db:seed` as a smoke test in staging/preview.
+## Local Docker-first path
 
-## Use cases
-1) New developer onboarding (first local setup)
-- Copy `.env.example` to `.env` and fill in `HOST/PORT`, `DB_*`, `MIGRATION_*`, and hashing values.
-- Export `BAROTRADER_DB_ADMIN_DBNAME`, `BAROTRADER_DB_ADMIN_USER`, and `BAROTRADER_DB_ADMIN_PASS` in your shell (not in `.env`).
-- Run `npm run db:setup` to create logins + database.
-- Run `npm run db:migrate up` to apply schema and grants.
-- Optionally run `npm run db:seed` to smoke test.
+For daily work:
 
-2) Daily dev after a pull with new migrations
-- Run `npm run db:migrate status` to see pending migrations.
-- Run `npm run db:migrate up` to apply what is pending.
+- copy `.env.example` to `.env`
+- use `npm run dev:up`
+- use `npm run dev:down` to stop without losing data
+- use `npm run dev:reset` to remove the dev volume and start fresh
 
-3) Full local reset (cleanup + rebuild)
-- Set safety gates:
-  - `APP_ENV=development`
-  - `DB_ALLOW_DESTRUCTIVE=YES`
-  - `DB_DESTRUCTIVE_CONFIRM=<your_database_name>`
-- Ensure `BAROTRADER_DB_ADMIN_DBNAME`, `BAROTRADER_DB_ADMIN_USER`, and `BAROTRADER_DB_ADMIN_PASS` are exported in your shell.
-- Run `npm run db:cleanup`.
-- Run `npm run db:setup`, then `npm run db:migrate up`, then `npm run db:seed`.
+`dev:reset` is the recommended full reset for local Docker development.
 
-4) Deploy to staging/prod (no recreating DB/roles)
-- Provision the database/roles outside the app (IaC or DBA runbook).
-- Run `npm run db:migrate up` using `MIGRATIONS_DATABASE_URL`.
-- Do not run `db:setup` or `db:cleanup` in managed environments.
-- Optional: run `npm run db:seed` as a smoke test in staging.
+## Manual provisioning path
 
-5) Switching branches / going back in time
-- First, run `npm run db:migrate status` to see how your DB compares.
-- If the target branch is **ahead** (has newer migrations):
-  - Run `npm run db:migrate up` to apply the new migrations.
-- If the target branch is **behind** (your DB has migrations it doesn't):
-  - Use `npm run db:migrate down` to roll back the extra migrations.
-  - If you need to reapply the latest migration after edits, use `npm run db:migrate redo`.
-  - If rolling back is unsafe or there are many migrations, prefer `db:cleanup` + rebuild.
+If you are targeting a manually managed PostgreSQL instance:
+
+- export `BAROTRADER_DB_ADMIN_DB`
+- export `BAROTRADER_DB_ADMIN_USER`
+- export `BAROTRADER_DB_ADMIN_PASSWORD`
+- export the rest of the canonical runtime/migration contract
+
+Then:
+
+```bash
+npm run db:setup
+npm run db:migrate -- up
+npm run db:seed
+```
+
+## Local integration-test path
+
+For DB-backed tests:
+
+- `scripts/test.js` prepares the local PostgreSQL base automatically
+- the harness provisions `RUNTIME_*` and `MIGRATION_*` under `TEST_*`
+- the logical environment is cleaned after the run by default
+
+For debugging:
+
+```bash
+TEST_KEEP_DB=1 npm run test:integration:debug
+```
+
+That preserves the local PostgreSQL base and the logical test DB.
+
+## Managed environments
+
+For CI/staging/prod-like environments:
+
+- infrastructure is created outside the app via workflow or orchestrator
+- `db:setup` and `db:cleanup` are not part of the normal deploy path
+- `db:migrate` runs against the configured `MIGRATION_*`
+
+## Branch switching and rollback
+
+- `npm run db:migrate status` shows applied vs pending migrations
+- `npm run db:migrate down` rolls back the latest migration
+- `npm run db:migrate redo` replays the latest migration
+
+If the local state is too divergent, prefer a clean rebuild of the environment
+instead of editing migration history.

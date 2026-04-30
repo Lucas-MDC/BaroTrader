@@ -1,72 +1,30 @@
 /*
 Migrations database configuration helpers.
-Resolves MIGRATIONS_DATABASE_URL or builds it from MIGRATION_* env vars.
 */
 
 import { loadEnv } from './env.js';
 import {
     assertRequired,
-    buildDatabaseUrl,
     getBaseConnectionConfig,
-    parseDatabaseUrl
+    validateDbConfig
 } from './db.shared.js';
 
-function validateConfig(config, label) {
+export function getMigrationsDbConfig() {
     /*
-    Ensure the config has required fields and report missing values.
-    */
-    if (!config) {
-        throw new Error(`${label} is required.`);
-    }
-
-    assertRequired(config.database, `${label} database`);
-    assertRequired(config.user, `${label} user`);
-
-    return config;
-}
-
-export function getMigrationsDbConfig({ required = true } = {}) {
-    /*
-    Resolve the migrations DB config, optionally returning null when not required.
+    Resolve the migrations DB config from canonical migration env vars.
     */
     loadEnv();
 
-    const base = getBaseConnectionConfig();
-    const database = process.env.MIGRATION_DB || process.env.DB_DBNAME;
-    const user = process.env.MIGRATION_USER;
-    const password = process.env.MIGRATION_PASS;
-    const derivedUrl = buildDatabaseUrl({
-        ...base,
-        database,
-        user,
-        password
-    });
-    const existingUrl = process.env.MIGRATIONS_DATABASE_URL || process.env.MIGRATION_DATABASE_URL;
-    const databaseUrl = existingUrl || derivedUrl;
-
-    if (!existingUrl && derivedUrl) {
-        process.env.MIGRATIONS_DATABASE_URL = derivedUrl;
-    }
-
-    const fromUrl = parseDatabaseUrl(databaseUrl);
-    if (fromUrl) {
-        return validateConfig(fromUrl, 'Migrations database config');
-    }
-
-    if (!required) {
-        return null;
-    }
-
-    return validateConfig(
+    return validateDbConfig(
         {
-            ...base,
-            database: assertRequired(
-                database,
-                'Migrator database name (MIGRATION_DB or DB_DBNAME)'
-            ),
-            user: assertRequired(user, 'Migrator user (MIGRATION_USER)'),
-            password
+            ...getBaseConnectionConfig(),
+            database: assertRequired(process.env.MIGRATION_DB, 'MIGRATION_DB'),
+            user: assertRequired(process.env.MIGRATION_USER, 'MIGRATION_USER'),
+            password: assertRequired(
+                process.env.MIGRATION_PASSWORD,
+                'MIGRATION_PASSWORD'
+            )
         },
-        'Migrations database config (MIGRATION_*)'
+        'Migrations database config'
     );
 }

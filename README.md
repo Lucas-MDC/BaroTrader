@@ -1,172 +1,186 @@
 # BaroTrader
 
-BaroTrader application with Express.js and PostgreSQL database.
+BaroTrader is an Express.js application with PostgreSQL, built around a
+Docker-first runtime and an explicit environment contract.
 
-## Prerequisites
+## Quickstart
 
-- Node.js (v18+)
-- PostgreSQL (v14+) or Docker with PostgreSQL container
+Prerequisites:
+- Docker Desktop/Engine + Docker Compose v2
+- Node.js 20+
 
-## Installation
-
-```bash
-npm install
-```
-
-## Configuration
-
-Copy the `.env.example` file to `.env` and configure the database connection:
+Setup:
 
 ```bash
 cp .env.example .env
+npm install
+npm run dev:up
 ```
 
-Edit the `.env` file with your PostgreSQL credentials. Use:
-- `HOST`, `PORT`, `DB_*` for the runtime application user (DML only)
-- `MIGRATION_*` for the migrator user (DDL/DCL)
-- `HASH_*`, `DB_BASE_ROLE`, and destructive gate flags as needed
-- `APP_ENV`, `DB_ALLOW_DESTRUCTIVE`, `DB_DESTRUCTIVE_CONFIRM` for destructive gates
-- (Optional) derived URLs via dotenv-expand:
-  - `DATABASE_URL=postgres://${DB_USER}:${DB_PASS}@${HOST}:${PORT}/${DB_DBNAME}`
-  - `MIGRATIONS_DATABASE_URL=postgres://${MIGRATION_USER}:${MIGRATION_PASS}@${HOST}:${PORT}/${MIGRATION_DB}`
+Then open `http://localhost:3000` or run `npm run dev:open`.
 
-Admin provisioning credentials (`BAROTRADER_DB_ADMIN_*`) must be injected via host/CI
-environment variables (not stored in `.env`).
+## Canonical environment contract
+
+The repository only supports the canonical variables below. The previous
+URL-based and alias-based contract has been removed from the public interface.
+
+### Required DB/admin variables
+
+- `BAROTRADER_DB_ADMIN_DB`
+- `BAROTRADER_DB_ADMIN_USER`
+- `BAROTRADER_DB_ADMIN_PASSWORD`
+- `RUNTIME_DB`
+- `RUNTIME_USER`
+- `RUNTIME_PASSWORD`
+- `MIGRATION_DB`
+- `MIGRATION_USER`
+- `MIGRATION_PASSWORD`
+- `TEST_DB`
+- `TEST_USER`
+- `TEST_PASSWORD`
+
+### Required app variables
+
+- `APP_ENV`
+- `APP_HOST`
+- `APP_PORT`
+- `DB_HOST`
+- `DB_PORT`
+- `DB_BASE_ROLE`
+- `HASH_PEPPER`
+- `REGISTER_MIN_DELAY_MS`
+
+### Secrets from files
+
+`config/env.js` supports `*_FILE` variants for:
+
+- `BAROTRADER_DB_ADMIN_PASSWORD`
+- `RUNTIME_PASSWORD`
+- `MIGRATION_PASSWORD`
+- `TEST_PASSWORD`
+- `HASH_PEPPER`
+
+## Operational doctrine
+
+### Local Docker dev
+
+- `docker compose` is the operational authority.
+- `.env` provides local defaults.
+- Exported shell variables override `.env`.
+- `compose.dev.yaml` consumes the variables explicitly; there are no credentials
+  or URLs hardcoded in the Compose file.
+
+### GitHub Actions
+
+- The workflow is the operational authority.
+- Temporarily, repository `secrets` feed the job and the PostgreSQL service
+  container; workflow comments mark values that should move back to variables or
+  environment-scoped configuration.
+- Tests consume the job environment; they do not bootstrap CI infrastructure by
+  discovering it dynamically.
+
+### Production
+
+- The platform or orchestrator is the operational authority.
+- `compose.prod.yaml` is a structure-only skeleton with required variables and
+  no defaults.
+- Missing required variables fail fast.
 
 ## Scripts
 
 | Script | Description |
 |--------|-------------|
-| `npm start` | Start the application |
-| `npm run dev` | Start the application in development mode with hot reload |
-| `npm run lint` | Run ESLint to check code quality |
-| `npm run lint:fix` | Run ESLint and fix auto-fixable issues |
-| `npm run test` | Run all Jest projects |
-| `npm run test:unit` | Run the Jest unit project |
-| `npm run test:integration` | Run the Jest integration project |
-| `npm run test:integration:debug` | Run integration tests in-band (recommended for interactive DB debugging) |
-| `npm run test:coverage` | Run Jest coverage report |
-| `npm run db:setup` | Provision the runtime/migrator users and application database |
-| `npm run db:migrate` | Run migrations (use `up`, `down`, `redo`, `status`) |
-| `npm run db:seed` | Run a smoke test/seed as the application user |
-| `npm run db:cleanup` | Clean up (drop) the database, user and roles (guarded) |
-| `npm run db:test-sqlite` | Test SQLite database operations |
+| `npm start` | Start the application using the canonical runtime env contract |
+| `npm run dev` | Start the application with `node --watch` |
+| `npm run dev:up` | Build and start `db`, `migrate`, and `app` |
+| `npm run dev:up:bg` | Start the dev stack detached |
+| `npm run dev:down` | Stop the dev stack and keep volumes |
+| `npm run dev:reset` | Stop the dev stack and remove volumes |
+| `npm run dev:bootstrap` | Re-run provisioning against the current dev DB |
+| `npm run dev:open` | Open the local app URL |
+| `npm run lint` | Run ESLint |
+| `npm run validate:env:runtime` | Validate the canonical runtime contract |
+| `npm run validate:env:test` | Validate the canonical test contract |
+| `npm test` | Run unit + integration tests; local DB base is prepared automatically |
+| `npm run test:unit` | Run unit tests only |
+| `npm run test:integration` | Run integration tests with automatic local DB base setup |
+| `npm run test:integration:debug` | Run integration tests in-band |
+| `npm run test:coverage` | Run coverage with the same automatic test-base orchestration |
+| `npm run db:setup` | Create runtime/migrator roles and application DB using `BAROTRADER_DB_ADMIN_*` |
+| `npm run db:migrate` | Run migrations using `MIGRATION_*` |
+| `npm run db:seed` | Run a smoke/seed flow as the runtime user |
+| `npm run db:cleanup` | Drop DB/users/role with explicit destructive confirmation |
 
 ## Testing
 
-Current test folders:
+DB-backed integration tests use the following model:
 
-```text
-tests/
-  unity/
-  integration/
-    registerApi.http-contract.test.js
-    registerClient.jsdom.test.js
-    registerService.db-integration.test.js
-    registerApi.backend-smoke.test.js
-```
+- Local: `scripts/test.js` brings up `compose.test.yaml`, points the process to
+  `127.0.0.1:55432`, validates the test contract, runs Jest, and tears the base
+  stack down afterward.
+- CI: GitHub Actions provides `services: postgres`; the same test command
+  consumes that base and does not attempt to preserve anything.
+- Harness: `tests/integration/support/dbHarness.js` uses `TEST_*` as the admin
+  connection, then provisions `RUNTIME_*` and `MIGRATION_*`, applies migrations,
+  and cleans up the logical test environment.
 
-Integration DB debugging flags:
+### Local debugging
 
-- `KEEP_DB=1`: skip test database cleanup in teardown.
-
-This flag is intended for local development/debug sessions. Keep it disabled in CI/homolog/deploy to keep tests fully automatic and fast.
+- `TEST_KEEP_DB=1` preserves both the logical test database and the local test
+  PostgreSQL base after the run.
+- This flag is local-only. In GitHub Actions it is ignored.
 
 PowerShell example:
 
 ```powershell
-$env:KEEP_DB='1'
+$env:TEST_KEEP_DB='1'
 npm run test:integration:debug
 ```
 
-## Database Setup
+## Database safety
 
-The project includes scripts to set up and test database connectivity.
+Destructive tooling is intentionally separate from the normal runtime/test path.
+`npm run db:cleanup` requires:
 
-### PostgreSQL Setup
+- `APP_ENV=development` or `APP_ENV=test`
+- `DB_ALLOW_DESTRUCTIVE=YES`
+- `DB_DESTRUCTIVE_CONFIRM` matching the target runtime database exactly
 
-1. Ensure PostgreSQL is running
-2. Configure the `.env` file with your credentials
-3. Export `BAROTRADER_DB_ADMIN_DBNAME`, `BAROTRADER_DB_ADMIN_USER`, and `BAROTRADER_DB_ADMIN_PASS` in your shell
-4. Run the database setup scripts:
+For the normal local Docker-first path, a full reset is `npm run dev:reset`, not
+`db:cleanup`.
 
-```bash
-npm run db:setup
-npm run db:migrate up
-```
+## Project structure
 
-This sequence will:
-- Create the runtime and migrator users and database
-- Apply schema migrations and grants (node-pg-migrate)
-
-Note: `db:setup` and `db:cleanup` require `BAROTRADER_DB_ADMIN_*` to be set in the host/CI environment.
-
-Optionally run the smoke test/seed:
-
-```bash
-npm run db:seed
-```
-
-## Migrations
-
-Migrations are SQL-first and executed via node-pg-migrate. For details on how to
-create, run, and check migration state, see `docs/migrations.md`.
-
-For lifecycle guidance (setup, cleanup, branching, and safety gates), see
-`docs/db-lifecycle.md`.
-
-### SQLite (for development)
-
-For quick local testing without PostgreSQL, you can use SQLite:
-
-```bash
-npm run db:test-sqlite
-```
-
-## Project Structure
-
-```
+```text
 config/
-  db.runtime.js            # Runtime DB config (env)
-  db.migrations.js         # Migrations DB config (env)
-  db.admin.js              # Admin DB config (env)
-  security.js              # Hash config
-  index.js                 # Config entrypoints
+  app.js
+  db.admin.js
+  db.migrations.js
+  db.runtime.js
+  db.shared.js
+  db.test.js
+  env.js
+  index.js
+  security.js
 db/
   engine/
-    main.js                # DB setup/migrate/seed/cleanup CLI
-    migrate.js             # node-pg-migrate runner + loader export
-    migration_sql.cjs      # SQL loader for migrations
-    pool.js                # Tooling pg-promise pools (admin/migrator/runtime)
-    safety.js              # Destructive command guardrails
-    setup/                 # User/database provisioning and cleanup
-    seed/                  # Smoke test/seed routines
+  migrations/
   sql/
-    runtime/               # Runtime queries (pg-promise)
-    infra/                 # Setup/cleanup/seed SQL (tooling)
-    migrations/            # SQL-first migrations (DDL changes)
-  migrations/              # node-pg-migrate wrappers (CommonJS)
-src/
-  app.js                   # Express app factory (middlewares + routes)
-  index.js                 # Runtime server entry point (listen)
-  db/                      # Runtime pg-promise pool
-  models/                  # Domain models (repositories)
-    user/
-      index.js             # Public API for user model
-      userModel.js         # User data access using runtime pool
-  utils/
-    database_sqlite.js     # SQLite setup and operations
-    database_utils.js      # Shared database utilities
-    databaseWrappers/      # Database abstraction layers
-      postgresql_wrapper.js
-      sqlite_wrapper.js
-docs/
-  db-architecture.md       # DB setup, roles, pooling and SQL layout
-  db-lifecycle.md          # DB lifecycle, safety gates, use cases
-  migrations.md            # How to create/run/check migrations
-  plans/                   # Test plans and feature-level coverage map
+docker/
+  node/
+  postgres/
+scripts/
+  dev.js
+  test.js
+  validate-env.js
+tests/
+  integration/
+  unity/
 ```
 
-## License
+## Additional docs
 
-ISC
+- `docs/devops.md`: local Docker and CI operational model
+- `docs/db-architecture.md`: config, roles, pools, and provisioning flow
+- `docs/db-lifecycle.md`: provisioning, cleanup, and safe reset guidance
+- `docs/migrations.md`: migration workflow and supported flags

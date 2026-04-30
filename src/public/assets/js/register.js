@@ -1,3 +1,7 @@
+/*
+Client-side registration form submission and feedback handling.
+*/
+
 import { getCredentialsFromInputs, showMessage } from '/static/shared/js/utils.js';
 import { redirectTo } from './navigation.js';
 
@@ -7,6 +11,11 @@ const passwordInput = document.querySelector('#password-register');
 const feedback = document.querySelector('#register-feedback');
 
 async function submitRegistration(event) {
+
+  /*
+  Send registration data to the API and report the outcome to the UI.
+  */
+
   event.preventDefault();
 
   if (!registerForm || !usernameInput || !passwordInput) {
@@ -55,4 +64,7 @@ async function submitRegistration(event) {
   }
 }
 
+/*
+Wire up the submit handler when the form is present.
+*/
 registerForm?.addEventListener('submit', submitRegistration);

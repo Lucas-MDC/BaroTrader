@@ -9,6 +9,7 @@ import { createIntegrationDbHarness } from './support/dbHarness.js';
 const harness = createIntegrationDbHarness({
   suiteName: 'register-service-db-integration'
 });
+const dbHookTimeoutMs = 60000;
 
 let registerUser;
 let RegistrationError;
@@ -21,11 +22,11 @@ beforeAll(async () => {
     '../../src/services/register/registerService.js'
   ));
   ({ getUserModel } = await import('../../src/models/user/index.js'));
-});
+}, dbHookTimeoutMs);
 
 afterAll(async () => {
   await harness.teardown();
-});
+}, dbHookTimeoutMs);
 
 describe('register service DB integration', () => {
   test('persists user data with password hash and salt', async () => {

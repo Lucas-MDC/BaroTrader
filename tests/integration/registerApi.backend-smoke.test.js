@@ -10,6 +10,7 @@ import { createIntegrationDbHarness } from './support/dbHarness.js';
 const harness = createIntegrationDbHarness({
   suiteName: 'register-api-backend-smoke'
 });
+const dbHookTimeoutMs = 60000;
 
 let createApp;
 let getUserModel;
@@ -19,11 +20,11 @@ beforeAll(async () => {
 
   ({ createApp } = await import('../../src/app.js'));
   ({ getUserModel } = await import('../../src/models/user/index.js'));
-});
+}, dbHookTimeoutMs);
 
 afterAll(async () => {
   await harness.teardown();
-});
+}, dbHookTimeoutMs);
 
 describe('register API backend smoke', () => {
   test('POST /api/register returns 201 and persists user', async () => {

@@ -1,5 +1,7 @@
 {
   "files.exclude": {
     "**/node_modules": true
-  }
+  },
+  "jest.runMode": "deferred",
+  "jest.jestCommandLine": "npm run test --"
 }

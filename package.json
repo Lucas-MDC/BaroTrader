@@ -7,18 +7,25 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
+    "dev:up": "node scripts/dev.js up",
+    "dev:up:bg": "node scripts/dev.js up -d",
+    "dev:down": "node scripts/dev.js down",
+    "dev:reset": "node scripts/dev.js reset",
+    "dev:bootstrap": "node scripts/dev.js bootstrap",
+    "dev:open": "node scripts/dev.js open",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
-    "test:integration": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --selectProjects integration",
-    "test:integration:debug": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --selectProjects integration --runInBand",
-    "test:unit": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --selectProjects unit",
-    "test:coverage": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --coverage --runInBand --verbose",
+    "validate:env:runtime": "node scripts/validate-env.js runtime",
+    "validate:env:test": "node scripts/validate-env.js test",
+    "test": "node scripts/test.js all",
+    "test:integration": "node scripts/test.js integration",
+    "test:integration:debug": "node scripts/test.js integration:debug",
+    "test:unit": "node scripts/test.js unit",
+    "test:coverage": "node scripts/test.js coverage",
     "db:setup": "node db/engine/main.js setup",
     "db:migrate": "node db/engine/main.js migrate",
     "db:seed": "node db/engine/main.js seed",
-    "db:cleanup": "node db/engine/main.js cleanup",
-    "db:test-sqlite": "node src/utils/database_sqlite.js"
+    "db:cleanup": "node db/engine/main.js cleanup"
   },
   "repository": {
     "type": "git",
@@ -35,9 +42,7 @@
     "dotenv": "^17.2.3",
     "dotenv-expand": "^10.0.0",
     "express": "^5.1.0",
-    "pg-promise": "^12.3.0",
-    "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7"
+    "pg-promise": "^12.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

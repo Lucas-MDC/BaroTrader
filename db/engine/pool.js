@@ -7,7 +7,8 @@ import pgPromise from 'pg-promise';
 import {
     getAdminDbConfig,
     getMigrationsDbConfig,
-    getRuntimeDbConfig
+    getRuntimeDbConfig,
+    getTestAdminDbConfig
 } from '../../config/index.js';
 
 const pgp = pgPromise({ capSQL: true });
@@ -27,6 +28,7 @@ function wrapConnection(conn) {
 let adminDb;
 let runtimeDb;
 let ownerDb;
+let testAdminDb;
 
 function getAdminDb() {
     /*
@@ -61,12 +63,27 @@ function getOwnerDb() {
     return ownerDb;
 }
 
+function getTestAdminDb() {
+    /*
+    Lazily create and return the test admin database connection.
+    */
+    if (!testAdminDb) {
+        testAdminDb = wrapConnection(pgp(getTestAdminDbConfig()));
+    }
+
+    return testAdminDb;
+}
+
 const closeAll = async () => {
     /*
     Close all pg-promise pools safely.
     */
     try {
         pgp.end();
+        adminDb = undefined;
+        runtimeDb = undefined;
+        ownerDb = undefined;
+        testAdminDb = undefined;
     } catch (err) {
         console.warn('Error closing pg-promise pools', err);
     }
@@ -76,5 +93,6 @@ export {
     closeAll,
     getAdminDb,
     getOwnerDb,
-    getRuntimeDb
+    getRuntimeDb,
+    getTestAdminDb
 };

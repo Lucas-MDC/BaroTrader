@@ -422,13 +422,13 @@ npm run test:integration
 
 Debugging real DB integration tests (development only):
 
-- `KEEP_DB=1`: skips teardown cleanup and keeps the test database.
+- `TEST_KEEP_DB=1`: skips teardown cleanup and keeps the test database.
 - Use serial execution (`--runInBand`) when debugging integration database state locally.
 
 PowerShell example:
 
 ```powershell
-$env:KEEP_DB='1'
+$env:TEST_KEEP_DB='1'
 npm run test:integration -- --runInBand
 ```
 
@@ -441,17 +441,12 @@ npm run test:coverage
 ### Coverage exclusions
 
 Coverage is controlled by `collectCoverageFrom` and `coveragePathIgnorePatterns` in
-`jest.config.cjs`. To exclude files that should not count toward coverage, add
-patterns such as:
+`jest.config.cjs`. The current config uses:
 
 ```js
-collectCoverageFrom: [
-  '<rootDir>/src/**/*.js',
-  '!<rootDir>/src/index.js'
-],
+collectCoverageFrom: ['<rootDir>/src/**/*.js'],
 coveragePathIgnorePatterns: [
-  '<rootDir>/src/db/',
-  '<rootDir>/src/utils/legacy/'
+  '<rootDir>/node_modules/',
+  '<rootDir>/tests/'
 ]
 ```
-

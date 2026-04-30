@@ -1,104 +1,166 @@
 /*
-Runs node-pg-migrate against the application database using
-MIGRATIONS_DATABASE_URL and the db/migrations folder.
+Runs node-pg-migrate programmatically against the application database.
 */
 
 import fs from 'fs';
 import path from 'path';
-import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
+import migrate from 'node-pg-migrate';
 import { getMigrationsDbConfig } from '../../config/index.js';
-import { loadMigrationSql } from './migration_sql.cjs';
 import { getOwnerDb } from './pool.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..', '..');
-const cliPath = path.join(
-    projectRoot,
-    'node_modules',
-    'node-pg-migrate',
-    'bin',
-    'node-pg-migrate.js'
-);
 const migrationsDir = path.join(projectRoot, 'db', 'migrations');
 const defaultMigrationsTable = 'pgmigrations';
 const defaultMigrationsSchema = 'public';
+const SUPPORTED_BOOLEAN_FLAGS = new Map([
+    ['--timestamp', 'timestamp'],
+    ['--fake', 'fake'],
+    ['--verbose', 'verbose'],
+    ['--no-lock', 'noLock'],
+    ['--create-schema', 'createSchema'],
+    ['--create-migrations-schema', 'createMigrationsSchema']
+]);
+const SUPPORTED_VALUE_FLAGS = new Map([
+    ['--count', 'count'],
+    ['--file', 'file'],
+    ['--schema', 'schema'],
+    ['--migrations-table', 'migrationsTable'],
+    ['--migrations-schema', 'migrationsSchema']
+]);
 
-function stripFlagWithValue(args, name) {
+function consumeFlagValue(args, index, flag) {
     /*
-    Remove a flag and its value from an argument list.
+    Read a CLI flag value supporting both `--flag value` and `--flag=value`.
     */
-    const cleaned = [];
+    const arg = args[index];
+    if (arg === flag) {
+        const value = args[index + 1];
+        if (value === undefined || value.startsWith('--')) {
+            throw new Error(`${flag} requires a value.`);
+        }
 
-    for (let i = 0; i < args.length; i += 1) {
-        const arg = args[i];
-        if (arg === name) {
-            i += 1;
-            continue;
-        }
-        if (arg.startsWith(`${name}=`)) {
-            continue;
-        }
-        cleaned.push(arg);
+        return { value, nextIndex: index + 1 };
     }
 
-    return cleaned;
+    const prefix = `${flag}=`;
+    if (arg.startsWith(prefix)) {
+        return { value: arg.slice(prefix.length), nextIndex: index };
+    }
+
+    return { value: null, nextIndex: index };
+}
+
+function parseNumericOption(value, label) {
+    const parsed = Number.parseInt(String(value || ''), 10);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+        throw new Error(`${label} must be a positive integer.`);
+    }
+
+    return parsed;
+}
+
+function parseMigrationOptions(direction, extraArgs = []) {
+    /*
+    Parse a supported subset of node-pg-migrate CLI flags for the programmatic API.
+    */
+    const options = {
+        checkOrder: true,
+        createMigrationsSchema: false,
+        createSchema: false,
+        direction,
+        dir: 'db/migrations',
+        ignorePattern: 'package\\.json',
+        migrationsSchema: defaultMigrationsSchema,
+        migrationsTable: defaultMigrationsTable,
+        schema: defaultMigrationsSchema,
+        singleTransaction: true
+    };
+
+    for (let i = 0; i < extraArgs.length; i += 1) {
+        const arg = extraArgs[i];
+
+        if (arg === '--') {
+            continue;
+        }
+
+        if (SUPPORTED_BOOLEAN_FLAGS.has(arg)) {
+            options[SUPPORTED_BOOLEAN_FLAGS.get(arg)] = true;
+            continue;
+        }
+
+        let handled = false;
+        for (const [flag, optionName] of SUPPORTED_VALUE_FLAGS.entries()) {
+            const { value, nextIndex } = consumeFlagValue(extraArgs, i, flag);
+            if (value === null) {
+                continue;
+            }
+
+            handled = true;
+            i = nextIndex;
+            options[optionName] =
+                optionName === 'count' ? parseNumericOption(value, '--count') : value;
+            break;
+        }
+
+        if (!handled) {
+            throw new Error(
+                `Unsupported node-pg-migrate option "${arg}" in programmatic mode.`
+            );
+        }
+    }
+
+    return options;
+}
+
+function createMigrationLogger() {
+    /*
+    Filter known timestamp-prefix noise from node-pg-migrate while keeping real errors.
+    */
+    return {
+        debug: console.debug.bind(console),
+        info: console.info.bind(console),
+        warn: console.warn.bind(console),
+        error: (message, ...args) => {
+            if (
+                typeof message === 'string' &&
+                message.startsWith("Can't determine timestamp for ")
+            ) {
+                return;
+            }
+
+            console.error(message, ...args);
+        }
+    };
+}
+
+async function runDirectionalMigrations(direction, extraArgs = []) {
+    /*
+    Execute node-pg-migrate for a single direction using object-based DB config.
+    */
+    const migrationConfig = getMigrationsDbConfig();
+    const options = parseMigrationOptions(direction, extraArgs);
+
+    await migrate({
+        ...options,
+        databaseUrl: migrationConfig,
+        logger: createMigrationLogger()
+    });
 }
 
 export async function runMigrations(direction = 'up', extraArgs = []) {
     /*
     Execute node-pg-migrate with sanitized arguments.
     */
-    if (!fs.existsSync(cliPath)) {
-        throw new Error(
-            'node-pg-migrate is not installed. Run: npm install --save-dev node-pg-migrate'
-        );
+    if (direction === 'redo') {
+        await runDirectionalMigrations('down', extraArgs);
+        await runDirectionalMigrations('up', extraArgs);
+        return;
     }
 
-    getMigrationsDbConfig();
-
-    await new Promise((resolve, reject) => {
-        const sanitizedArgs = stripFlagWithValue(
-            stripFlagWithValue(
-                stripFlagWithValue(extraArgs, '--migrations-dir'),
-                '--database-url-var'
-            ),
-            '--envPath'
-        );
-
-        const baseArgs = [
-            '--migrations-dir',
-            'db/migrations',
-            '--ignore-pattern',
-            'package\\.json',
-            '--database-url-var',
-            'MIGRATIONS_DATABASE_URL'
-        ];
-        
-        const envPath = path.join(projectRoot, '.env');
-        if (fs.existsSync(envPath)) {
-            baseArgs.push('--envPath', '.env');
-        }
-
-        const child = spawn(
-            process.execPath,
-            [cliPath, direction, ...baseArgs, ...sanitizedArgs],
-            {
-                cwd: projectRoot,
-                stdio: 'inherit',
-                env: {
-                    ...process.env
-                }
-            }
-        );
-
-        child.on('error', reject);
-        child.on('close', (code) => {
-            if (code === 0) return resolve();
-            reject(new Error(`node-pg-migrate exited with code ${code}`));
-        });
-    });
+    await runDirectionalMigrations(direction, extraArgs);
 }
 
 function getNumericPrefix(name) {
@@ -217,5 +279,3 @@ export async function printMigrationStatus() {
     console.log(`---`);
     console.log(`Total: ${migrationNames.length} | Applied: ${appliedCount} | Pending: ${pendingCount}`);
 }
-
-export { loadMigrationSql };

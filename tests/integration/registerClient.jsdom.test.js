@@ -1,6 +1,7 @@
 /** @jest-environment jsdom */
 import { jest } from '@jest/globals';
 import { readFileSync } from 'fs';
+import { URL as NodeUrl, fileURLToPath } from 'url';
 
 /**
  * This test suite covers the integration between the real registration page and 
@@ -9,7 +10,9 @@ import { readFileSync } from 'fs';
  * calls, feedback, and redirection.
  */
 const html = readFileSync(
-  new URL('../../src/public/pages/noSession/register.html', import.meta.url),
+  fileURLToPath(
+    new NodeUrl('../../src/public/pages/noSession/register.html', import.meta.url)
+  ),
   'utf8'
 );
 

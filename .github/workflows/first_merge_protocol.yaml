@@ -16,26 +16,35 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
+          POSTGRES_USER: ${{ secrets.TEST_USER }} # Temporary: should be a repository variable, not a repository secret.
+          POSTGRES_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.TEST_DB }} # Temporary: should be a repository variable, not a repository secret.
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U postgres -d postgres"
+          --health-cmd="pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
 
     env:
-      HOST: localhost
-      PORT: 5432
-      BAROTRADER_DB_ADMIN_DBNAME: postgres
-      BAROTRADER_DB_ADMIN_USER: postgres
-      BAROTRADER_DB_ADMIN_PASS: postgres
-      HASH_PEPPER: ci-pepper
-      REGISTER_MIN_DELAY_MS: 0
-      KEEP_DB: 0
+      APP_ENV: ${{ secrets.APP_ENV }} # Temporary: should be workflow/job env for CI, or an environment variable for deploys.
+      APP_HOST: ${{ secrets.APP_HOST }} # Temporary: should be workflow/job env for CI, or an environment variable for deploys.
+      APP_PORT: ${{ secrets.APP_PORT }} # Temporary: should be workflow/job env for CI, or an environment variable for deploys.
+      DB_HOST: ${{ secrets.DB_HOST }} # Temporary: should be workflow/job env for CI, or an environment variable for deploys.
+      DB_PORT: ${{ secrets.DB_PORT }} # Temporary: should be workflow/job env for CI, or an environment variable for deploys.
+      DB_BASE_ROLE: ${{ secrets.DB_BASE_ROLE }} # Temporary: should be a repository variable, not a repository secret.
+      HASH_PEPPER: ${{ secrets.HASH_PEPPER }} # Temporary: should be an environment secret, not a repository secret.
+      REGISTER_MIN_DELAY_MS: ${{ secrets.REGISTER_MIN_DELAY_MS }} # Temporary: should be a repository variable, not a repository secret.
+      TEST_DB: ${{ secrets.TEST_DB }} # Temporary: should be a repository variable, not a repository secret.
+      TEST_USER: ${{ secrets.TEST_USER }} # Temporary: should be a repository variable, not a repository secret.
+      TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+      RUNTIME_DB: ${{ secrets.RUNTIME_DB }} # Temporary: should be an environment variable, not a repository secret.
+      RUNTIME_USER: ${{ secrets.RUNTIME_USER }} # Temporary: should be an environment variable, not a repository secret.
+      RUNTIME_PASSWORD: ${{ secrets.RUNTIME_PASSWORD }} # Temporary: should be an environment secret, not a repository secret.
+      MIGRATION_DB: ${{ secrets.MIGRATION_DB }} # Temporary: should be an environment variable, not a repository secret.
+      MIGRATION_USER: ${{ secrets.MIGRATION_USER }} # Temporary: should be an environment variable, not a repository secret.
+      MIGRATION_PASSWORD: ${{ secrets.MIGRATION_PASSWORD }} # Temporary: should be an environment secret, not a repository secret.
 
     steps:
       - name: Checkout
@@ -49,6 +58,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Validate test environment
+        run: npm run validate:env:test
 
       - name: Lint
         run: npm run lint

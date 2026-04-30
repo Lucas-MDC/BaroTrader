@@ -1,16 +1,12 @@
 /*
-
-* User Model Module
-
-* This module provides access to the User model, ensuring 
-that only one instance
-* of the model is created and reused throughout the application. 
-It also provides
-* a function to close the database connection when needed.
-
+User model accessors backed by the runtime database connection.
+Caches a single model instance and exposes a close helper.
 */
 
-import { db } from '../../db/pool.js';
+import {
+    closeRuntimeDb,
+    getRuntimeDb
+} from '../../db/pool.js';
 import { createUserModel } from './userModel.js';
 
 let cachedModel = null;
@@ -18,14 +14,11 @@ let cachedModel = null;
 export function getUserModel() {
 
     /*
-    This function returns the cached User model instance. 
-    If the model has not been created yet, it initializes 
-    it using the createUserModel function and caches it 
-    for future use.
+    Return the cached user model instance, creating it on demand.
     */
 
     if (!cachedModel) {
-        cachedModel = createUserModel(db);
+        cachedModel = createUserModel(getRuntimeDb());
     }
     return cachedModel;
 }
@@ -33,11 +26,10 @@ export function getUserModel() {
 export async function closeUserModel() {
 
     /*
-    This function closes the database connection associated 
-    with the User model and clears the cached model instance.
+    Close the runtime database connection and clear the cache.
     */
 
-    await db.close();
+    await closeRuntimeDb();
     cachedModel = null;
 }
 
