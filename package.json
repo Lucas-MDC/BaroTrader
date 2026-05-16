@@ -6,13 +6,15 @@
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "node --watch src/index.js",
+    "dev": "npm run build:frontend && node --watch src/index.js",
     "dev:up": "node scripts/dev.js up",
     "dev:up:bg": "node scripts/dev.js up -d",
     "dev:down": "node scripts/dev.js down",
     "dev:reset": "node scripts/dev.js reset",
     "dev:bootstrap": "node scripts/dev.js bootstrap",
     "dev:open": "node scripts/dev.js open",
+    "build:frontend": "esbuild src/frontend/main.jsx --bundle --outfile=src/public/assets/build/app.js --format=esm --jsx=automatic --minify",
+    "watch:frontend": "esbuild src/frontend/main.jsx --bundle --outfile=src/public/assets/build/app.js --format=esm --jsx=automatic --sourcemap --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "validate:env:runtime": "node scripts/validate-env.js runtime",
@@ -20,7 +22,10 @@
     "test": "node scripts/test.js all",
     "test:integration": "node scripts/test.js integration",
     "test:integration:debug": "node scripts/test.js integration:debug",
+    "test:integration:report": "node scripts/test.js integration --verbose",
+    "test:report": "node scripts/test.js all --verbose",
     "test:unit": "node scripts/test.js unit",
+    "test:unit:report": "node scripts/test.js unit --verbose",
     "test:coverage": "node scripts/test.js coverage",
     "db:setup": "node db/engine/main.js setup",
     "db:migrate": "node db/engine/main.js migrate",
@@ -46,11 +51,14 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "esbuild": "^0.28.0",
     "eslint": "^9.39.1",
     "globals": "^16.5.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^30.2.0",
     "node-pg-migrate": "^7.7.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "supertest": "^6.3.4"
   }
 }

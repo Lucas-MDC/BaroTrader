@@ -1,6 +1,7 @@
 node_modules/
 bins/
 coverage/
+src/public/assets/build/
 
 .env
 .codex

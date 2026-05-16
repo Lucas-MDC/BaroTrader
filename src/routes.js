@@ -13,28 +13,25 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const SRC_ROOT = path.join(__dirname);
-const PUBLIC_PAGES_DIR = path.join(SRC_ROOT, 'public', 'pages');
+const FRONTEND_SHELL = path.join(SRC_ROOT, 'frontend', 'index.html');
 const PUBLIC_ASSETS_DIR = path.join(SRC_ROOT, 'public', 'assets');
-const PRIVATE_PAGES_DIR = path.join(SRC_ROOT, 'private', 'pages');
-const PRIVATE_ASSETS_DIR = path.join(SRC_ROOT, 'private', 'assets');
 const SHARED_DIR = path.join(SRC_ROOT, 'shared');
 
+const FRONTEND_ROUTES = [
+  '/',
+  '/public/static/pages/noSession/register.html',
+  '/private/static/pages/homeInternal.html'
+];
+
 /*
-Shared static assets for public and private pages (CSS/JS/images).
+Shared static assets for the SPA shell.
 */
 router.use('/static/shared', express.static(SHARED_DIR));
 
 /*
-Public assets and pages.
+Compiled frontend assets.
 */
 router.use('/public/static/assets', express.static(PUBLIC_ASSETS_DIR));
-router.use('/public/static/pages', express.static(PUBLIC_PAGES_DIR));
-
-/*
-Private assets and pages (auth guard can be added later).
-*/
-router.use('/private/static/assets', express.static(PRIVATE_ASSETS_DIR));
-router.use('/private/static/pages', express.static(PRIVATE_PAGES_DIR));
 
 /*
 API routes.
@@ -42,10 +39,10 @@ API routes.
 router.use('/api', servicesRouter);
 
 /*
-Public landing page.
+SPA entry points. Keep these explicit so /api/* never falls back to HTML.
 */
-router.get('/', (req, res) => {
-  res.sendFile(path.join(PUBLIC_PAGES_DIR, 'home.html'));
+router.get(FRONTEND_ROUTES, (req, res) => {
+  res.sendFile(FRONTEND_SHELL);
 });
 
 /*
