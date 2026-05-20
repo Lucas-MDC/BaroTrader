@@ -1,8 +1,12 @@
 const baseConfig = {
   clearMocks: true,
   testEnvironment: 'node',
+  extensionsToTreatAsEsm: ['.jsx'],
   moduleNameMapper: {
     '^/static/shared/js/utils.js$': '<rootDir>/src/shared/js/utils.js'
+  },
+  transform: {
+    '^.+\\.jsx$': '<rootDir>/scripts/jest-esbuild-transform.cjs'
   }
 };
 

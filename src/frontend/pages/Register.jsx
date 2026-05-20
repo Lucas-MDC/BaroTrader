@@ -45,7 +45,13 @@ export default function Register() {
     const usernameInput = usernameRef.current;
     const passwordInput = passwordRef.current;
 
-    if (!form || !usernameInput || !passwordInput) {
+    if (
+      !form ||
+      !usernameInput ||
+      !passwordInput ||
+      !form.contains(usernameInput) ||
+      !form.contains(passwordInput)
+    ) {
       showMessage('Registration form is unavailable.', true);
       return;
     }
