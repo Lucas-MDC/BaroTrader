@@ -5,7 +5,7 @@ Runs node-pg-migrate programmatically against the application database.
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import migrate from 'node-pg-migrate';
+import { runner as migrate } from 'node-pg-migrate';
 import { getMigrationsDbConfig } from '../../config/index.js';
 import { getOwnerDb } from './pool.js';
 
