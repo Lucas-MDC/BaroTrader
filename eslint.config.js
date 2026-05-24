@@ -4,10 +4,21 @@ import { defineConfig } from "eslint/config";
 
 export default defineConfig([
   {
-    files: ["src/public/**/*.js", "src/private/assets/js/**/*.js"],
+    ignores: ["src/public/assets/build/**"],
+  },
+  {
+    files: ["src/frontend/**/*.{js,jsx}"],
     plugins: { js },
     extends: ["js/recommended"],
-    languageOptions: { globals: globals.browser },
+    languageOptions: {
+      globals: globals.browser,
+      parserOptions: {
+        ecmaFeatures: { jsx: true },
+      },
+    },
+    rules: {
+      "no-unused-vars": ["error", { varsIgnorePattern: "^[A-Z]" }],
+    },
   },
   {
     files: ["tests/**/*.js"],
@@ -19,7 +30,7 @@ export default defineConfig([
   },
   {
     files: ["**/*.{js,mjs,cjs}"],
-    ignores: ["src/public/**/*.js", "src/private/assets/js/**/*.js"],
+    ignores: ["src/frontend/**/*.js"],
     plugins: { js },
     extends: ["js/recommended"],
     languageOptions: { globals: globals.node },

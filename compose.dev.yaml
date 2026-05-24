@@ -17,8 +17,12 @@ services:
     build:
       dockerfile: Dockerfile.dev
     volumes:
-      - .:/app
-      - app_node_modules:/app/node_modules
+      - ./config:/app/config
+      - ./db:/app/db
+      - ./scripts:/app/scripts
+      - ./src:/app/src
+      - ./package.json:/app/package.json:ro
+      - ./package-lock.json:/app/package-lock.json:ro
     environment:
       APP_ENV: ${APP_ENV:?Set APP_ENV}
       APP_HOST: ${APP_HOST:?Set APP_HOST}
@@ -48,8 +52,12 @@ services:
     build:
       dockerfile: Dockerfile.dev
     volumes:
-      - .:/app
-      - app_node_modules:/app/node_modules
+      - ./config:/app/config
+      - ./db:/app/db
+      - ./scripts:/app/scripts
+      - ./src:/app/src
+      - ./package.json:/app/package.json:ro
+      - ./package-lock.json:/app/package-lock.json:ro
     environment:
       APP_ENV: ${APP_ENV:?Set APP_ENV}
       APP_HOST: ${APP_HOST:?Set APP_HOST}

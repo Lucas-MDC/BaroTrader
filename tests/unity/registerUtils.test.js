@@ -1,49 +1,40 @@
-﻿/** @jest-environment jsdom */
+/** @jest-environment jsdom */
 /**
- * This test suite covers the isolated utilities used by the client registration flow.
- * The tests are grouped here because they validate small, reusable DOM helpers,
- * focusing on how messages are shown and how credentials are read from inputs.
+ * This test suite covers the isolated validation helpers used by the client
+ * registration flow.
  */
-import { showMessage, getCredentialsFromInputs } from '../../src/shared/js/utils.js';
+import {
+  PASSWORD_PATTERN,
+  USERNAME_PATTERN,
+  getCredentialsFromInputs
+} from '../../src/frontend/shared/validation.js';
 
-describe('showMessage', () => {
-  test('no-op for null target', () => {
-    // REG-UNIT-004: showMessage
-    expect(() => showMessage(null, 'Hello')).not.toThrow();
-    expect(() => showMessage(undefined, 'Hello')).not.toThrow();
+describe('registration validation patterns', () => {
+  test('username pattern accepts normalized usernames', () => {
+    // REG-UNIT-004: validation patterns
+    const pattern = new RegExp(USERNAME_PATTERN);
+
+    expect(pattern.test('user')).toBe(true);
+    expect(pattern.test('user.name_123')).toBe(true);
   });
 
-  test('sets success color and text', () => {
-    // REG-UNIT-004: showMessage
-    const target = document.createElement('p');
-    showMessage(target, 'Success');
-    expect(target.textContent).toBe('Success');
-    expect(['#047857', 'rgb(4, 120, 87)']).toContain(target.style.color);
+  test('username pattern rejects uppercase and invalid boundary characters', () => {
+    // REG-UNIT-004: validation patterns
+    const pattern = new RegExp(USERNAME_PATTERN);
+
+    expect(pattern.test('User')).toBe(false);
+    expect(pattern.test('.user')).toBe(false);
+    expect(pattern.test('user-')).toBe(false);
   });
 
-  test('sets error color and text', () => {
-    // REG-UNIT-004: showMessage
-    const target = document.createElement('p');
-    showMessage(target, 'Error', true);
-    expect(target.textContent).toBe('Error');
-    expect(['#b91c1c', 'rgb(185, 28, 28)']).toContain(target.style.color);
-  });
+  test('password pattern requires a visible ASCII password with letters and numbers', () => {
+    // REG-UNIT-004: validation patterns
+    const pattern = new RegExp(PASSWORD_PATTERN);
 
-  test('keeps HTML as text', () => {
-    // REG-UNIT-004: showMessage
-    const target = document.createElement('p');
-    const message = '<img src=x onerror="alert(1)">';
-    showMessage(target, message);
-    expect(target.textContent).toBe(message);
-    expect(target.querySelector('img')).toBeNull();
-  });
-
-  test('empty message clears text', () => {
-    // REG-UNIT-004: showMessage
-    const target = document.createElement('p');
-    target.textContent = 'Existing';
-    showMessage(target, '');
-    expect(target.textContent).toBe('');
+    expect(pattern.test('Pass1234!')).toBe(true);
+    expect(pattern.test('password')).toBe(false);
+    expect(pattern.test('12345678')).toBe(false);
+    expect(pattern.test('        ')).toBe(false);
   });
 });
 
@@ -79,4 +70,3 @@ describe('getCredentialsFromInputs', () => {
       .toBe('');
   });
 });
-
