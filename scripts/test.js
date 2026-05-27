@@ -1,22 +1,26 @@
 /*
-Development helper CLI that centralizes Jest execution flags.
-Keeps package.json scripts short and forwards extra Jest arguments.
+Development helper CLI for test execution.
+Locally it runs Jest inside the Compose test runner; in GitHub Actions it keeps
+using the workflow-provided PostgreSQL service and the runner's npm install.
 */
 
+import fs from 'fs';
 import os from 'os';
 import { spawnSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { loadEnv } from '../config/env.js';
-import { getTestAdminDbConfig } from '../config/index.js';
 
 const projectRoot = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
     '..'
 );
 const testComposeFile = 'compose.test.yaml';
+const testRunnerService = 'test-runner';
+const testContainerFlag = 'BAROTRADER_TEST_CONTAINER';
 const localTestDbHost = '127.0.0.1';
 const localTestDbPort = '55432';
+const composeTestDbHost = 'db';
+const composeTestDbPort = '5432';
 const jestBinPath = path.join(
     projectRoot,
     'node_modules',
@@ -27,35 +31,125 @@ const jestBinPath = path.join(
 
 const modeArgsMap = {
     all: ['--runInBand'],
+    report: ['--runInBand', '--verbose'],
     unit: ['--selectProjects', 'unit'],
+    'unit:report': ['--selectProjects', 'unit', '--verbose'],
     integration: ['--selectProjects', 'integration', '--runInBand'],
     'integration:debug': ['--selectProjects', 'integration', '--runInBand'],
+    'integration:report': ['--selectProjects', 'integration', '--runInBand', '--verbose'],
     coverage: ['--coverage', '--runInBand', '--verbose']
 };
+const dbBackedModes = new Set([
+    'all',
+    'report',
+    'integration',
+    'integration:debug',
+    'integration:report',
+    'coverage'
+]);
 let dockerCommand;
+let envFileCache;
 
 function printUsage() {
-
     /*
-    Print CLI usage instructions for test execution.
+    Print the accepted test modes and optional Jest passthrough arguments.
     */
 
     console.log(
-        'Usage: node scripts/test.js <all|unit|integration|integration:debug|coverage> [jest args]'
+        'Usage: node scripts/test.js <all|report|unit|unit:report|integration|integration:debug|integration:report|coverage> [jest args]'
     );
+}
+
+function parseEnvFileLine(line) {
+    /*
+    Parse one simple KEY=value line from .env for host-side launcher decisions.
+    */
+
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) return null;
+
+    const equalsIndex = trimmed.indexOf('=');
+    if (equalsIndex <= 0) return null;
+
+    const key = trimmed.slice(0, equalsIndex).trim();
+    let value = trimmed.slice(equalsIndex + 1).trim();
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) return null;
+
+    if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+    ) {
+        value = value.slice(1, -1);
+    } else {
+        const commentIndex = value.search(/\s#/);
+        if (commentIndex !== -1) {
+            value = value.slice(0, commentIndex).trim();
+        }
+    }
+
+    return [key, value];
+}
+
+function readEnvFile() {
+    /*
+    Read and cache .env without importing dotenv on the host launcher path.
+    */
+
+    if (envFileCache) {
+        return envFileCache;
+    }
+
+    envFileCache = new Map();
+    const envPath = path.join(projectRoot, '.env');
+    if (!fs.existsSync(envPath)) {
+        return envFileCache;
+    }
+
+    const contents = fs.readFileSync(envPath, 'utf8');
+    contents.split(/\r?\n/).forEach((line) => {
+        const entry = parseEnvFileLine(line);
+        if (entry) {
+            envFileCache.set(entry[0], entry[1]);
+        }
+    });
+
+    return envFileCache;
+}
+
+function envValue(name) {
+    /*
+    Resolve an environment value, preferring exported shell variables over .env.
+    */
+
+    if (process.env[name] !== undefined) {
+        return process.env[name];
+    }
+
+    return readEnvFile().get(name);
+}
+
+function envFlag(name) {
+    /*
+    Interpret common truthy flag values from the resolved environment.
+    */
+
+    const value = String(envValue(name) || '').toLowerCase();
+    return value === '1' || value === 'true' || value === 'yes';
 }
 
 function isWsl() {
     /*
-    Detect WSL to support Docker Desktop's docker.exe fallback.
+    Detect WSL so Docker Desktop's docker.exe fallback can be considered.
     */
+
     return process.platform === 'linux' && /microsoft/i.test(os.release());
 }
 
 function resolveDockerCommand() {
     /*
-    Resolve the Docker CLI executable across Linux, Windows, and WSL.
+    Resolve and cache the Docker CLI executable for the current platform.
     */
+
     if (dockerCommand) {
         return dockerCommand;
     }
@@ -83,8 +177,9 @@ function resolveDockerCommand() {
 
 function ensureDocker() {
     /*
-    Verify that the Docker daemon is available before running Compose.
+    Verify that Docker is installed and this user can access the daemon.
     */
+
     const result = spawnSync(resolveDockerCommand(), ['info'], {
         cwd: projectRoot,
         encoding: 'utf8'
@@ -111,15 +206,17 @@ function ensureDocker() {
 
 function composeArgs() {
     /*
-    Build the Compose arguments for the local test stack.
+    Build the base Compose command arguments for the isolated test project.
     */
+
     return ['compose', '-f', testComposeFile];
 }
 
 function runDocker(args) {
     /*
-    Run Docker and fail fast on command errors.
+    Run Docker and throw when the command exits unsuccessfully.
     */
+
     const result = spawnSync(resolveDockerCommand(), args, {
         cwd: projectRoot,
         stdio: 'inherit',
@@ -135,65 +232,93 @@ function runDocker(args) {
     }
 }
 
-function envFlag(name) {
-    loadEnv();
-    const value = String(process.env[name] || '').toLowerCase();
-    return value === '1' || value === 'true' || value === 'yes';
+function runDockerStatus(args) {
+    /*
+    Run Docker and return the process status for commands that own the test exit.
+    */
+
+    const result = spawnSync(resolveDockerCommand(), args, {
+        cwd: projectRoot,
+        stdio: 'inherit',
+        env: { ...process.env }
+    });
+
+    if (result.error) {
+        throw result.error;
+    }
+
+    return result.status || 0;
+}
+
+function normalizeCliArgs(args) {
+    /*
+    Remove npm/direct CLI separators before forwarding arguments to Jest.
+    */
+
+    return args.filter((arg) => arg !== '--');
 }
 
 function modeRequiresDbInfra(mode) {
     /*
-    Determine whether the selected test mode includes DB-backed integration tests.
+    Identify modes that need the local PostgreSQL test base.
     */
-    return mode === 'all' || mode === 'integration' || mode === 'integration:debug' || mode === 'coverage';
+
+    return dbBackedModes.has(mode);
+}
+
+function isCi() {
+    /*
+    Detect GitHub Actions so the workflow-provided services remain authoritative.
+    */
+
+    return envFlag('GITHUB_ACTIONS');
+}
+
+function isTestContainer() {
+    /*
+    Detect the Compose test-runner container to avoid recursive Docker orchestration.
+    */
+
+    return envFlag(testContainerFlag);
+}
+
+async function loadProjectEnv() {
+    /*
+    Load the project env contract inside Node environments that have dependencies.
+    */
+
+    const { loadEnv } = await import('../config/env.js');
+    loadEnv();
 }
 
 function prepareCiDbEnv() {
     /*
-    Normalize DB host/port defaults for GitHub Actions service containers.
+    Normalize DB connection defaults for GitHub Actions PostgreSQL services.
     */
+
     process.env.DB_HOST = process.env.DB_HOST || localTestDbHost;
     process.env.DB_PORT = process.env.DB_PORT || '5432';
     delete process.env.TEST_KEEP_DB;
 }
 
-function prepareLocalDbEnv() {
+function prepareContainerDbEnv() {
     /*
-    Point the test process at the local Dockerized PostgreSQL test base.
+    Point in-container tests at the Compose PostgreSQL service.
     */
-    process.env.DB_HOST = localTestDbHost;
-    process.env.DB_PORT = localTestDbPort;
+
+    process.env.DB_HOST = process.env.DB_HOST || composeTestDbHost;
+    process.env.DB_PORT = process.env.DB_PORT || composeTestDbPort;
 }
 
-function ensureLocalTestStack() {
+async function validateTestEnv() {
     /*
-    Start the local PostgreSQL base used by DB-backed integration tests.
+    Validate the canonical test environment before DB-backed Jest runs.
     */
-    ensureDocker();
-    runDocker([...composeArgs(), 'up', '-d', '--wait', 'db']);
-    prepareLocalDbEnv();
-}
 
-function teardownLocalTestStack() {
-    /*
-    Stop and remove the local PostgreSQL base unless debug preservation is enabled.
-    */
-    if (envFlag('TEST_KEEP_DB')) {
-        const testAdminConfig = getTestAdminDbConfig();
-        console.log(
-            `[test stack] TEST_KEEP_DB=1 enabled. Local test stack preserved at ${localTestDbHost}:${localTestDbPort} (${testAdminConfig.database}).`
-        );
-        return;
-    }
-
-    runDocker([...composeArgs(), 'down', '--volumes', '--remove-orphans']);
-}
-
-function validateTestEnv() {
-    /*
-    Validate the full canonical test contract before running Jest.
-    */
-    const result = spawnSync(process.execPath, ['scripts/validate-env.js', 'test'], {
+    const result = spawnSync(
+        process.execPath, 
+        ['scripts/validate-env.js', 'test'], 
+    {
         cwd: projectRoot,
         stdio: 'inherit',
         env: { ...process.env }
@@ -208,37 +333,108 @@ function validateTestEnv() {
     }
 }
 
-function normalizeCliArgs(args) {
-
+function printPreservedLocalStack() {
     /*
-    Remove npm/direct CLI separators before forwarding to Jest.
+    Print the preserved local test DB details when TEST_KEEP_DB is enabled.
     */
 
-    return args.filter((arg) => arg !== '--');
+    const database = envValue('TEST_DB') || 'unknown';
+    console.log(
+        `[test stack] TEST_KEEP_DB=1 enabled. Local test stack preserved at ${localTestDbHost}:${localTestDbPort} (${database}).`
+    );
 }
 
-const args = process.argv.slice(2);
-const mode = args[0] || 'all';
-const extraArgs = normalizeCliArgs(args.slice(1));
-const modeArgs = modeArgsMap[mode];
-let localStackStarted = false;
-let exitCode = 0;
+function ensureLocalTestStack() {
+    /*
+    Start the local PostgreSQL test base and wait for its healthcheck.
+    */
 
-if (!modeArgs) {
-    printUsage();
-    process.exit(1);
+    ensureDocker();
+    runDocker([...composeArgs(), 'up', '-d', '--wait', 'db']);
 }
 
-try {
+function teardownLocalTestStack() {
+    /*
+    Stop the local test stack unless the caller requested preservation.
+    */
+
+    if (envFlag('TEST_KEEP_DB')) {
+        printPreservedLocalStack();
+        return;
+    }
+
+    runDocker([...composeArgs(), 'down', '--volumes', '--remove-orphans']);
+}
+
+function runLocalContainerizedTests(mode, extraArgs) {
+    /*
+    Host-side launcher: run the requested mode in the Compose test-runner.
+    */
+
+    const needsDb = modeRequiresDbInfra(mode);
+    let composeTouched = false;
+    let exitCode = 0;
+
+    try {
+        ensureDocker();
+        if (needsDb) {
+            ensureLocalTestStack();
+            composeTouched = true;
+        }
+
+        const runArgs = [
+            ...composeArgs(),
+            'run',
+            '--rm',
+            '--build'
+        ];
+        if (!needsDb) {
+            runArgs.push('--no-deps');
+        }
+
+        exitCode = runDockerStatus([
+            ...runArgs,
+            testRunnerService,
+            'node',
+            'scripts/test.js',
+            mode,
+            ...extraArgs
+        ]);
+        composeTouched = true;
+    } catch (error) {
+        console.error(error.message);
+        exitCode = 1;
+    } finally {
+        if (composeTouched) {
+            try {
+                if (needsDb) {
+                    teardownLocalTestStack();
+                } else {
+                    runDocker([...composeArgs(), 'down', '--volumes', '--remove-orphans']);
+                }
+            } catch (error) {
+                console.error(error.message);
+                exitCode = 1;
+            }
+        }
+    }
+
+    return exitCode;
+}
+
+async function runJest(mode, modeArgs, extraArgs) {
+    /*
+    Inner runner: execute Jest either inside the test container or in CI.
+    */
+
     if (modeRequiresDbInfra(mode)) {
-        loadEnv();
-        if (envFlag('GITHUB_ACTIONS')) {
+        await loadProjectEnv();
+        if (isCi()) {
             prepareCiDbEnv();
         } else {
-            ensureLocalTestStack();
-            localStackStarted = true;
+            prepareContainerDbEnv();
         }
-        validateTestEnv();
+        await validateTestEnv();
     }
 
     const result = spawnSync(
@@ -255,19 +451,30 @@ try {
         throw result.error;
     }
 
-    exitCode = result.status || 0;
+    return result.status || 0;
+}
+
+const args = process.argv.slice(2);
+const mode = args[0] || 'all';
+const extraArgs = normalizeCliArgs(args.slice(1));
+const modeArgs = modeArgsMap[mode];
+let exitCode = 0;
+
+if (!modeArgs) {
+    printUsage();
+    process.exit(1);
+}
+
+if (!isCi() && !isTestContainer()) {
+    exitCode = runLocalContainerizedTests(mode, extraArgs);
+    process.exit(exitCode);
+}
+
+try {
+    exitCode = await runJest(mode, modeArgs, extraArgs);
 } catch (error) {
     console.error(error.message);
     exitCode = 1;
-} finally {
-    if (localStackStarted) {
-        try {
-            teardownLocalTestStack();
-        } catch (error) {
-            console.error(error.message);
-            exitCode = 1;
-        }
-    }
 }
 
 process.exit(exitCode);

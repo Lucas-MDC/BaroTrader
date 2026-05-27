@@ -1,3 +1,5 @@
+name: barotrader-test
+
 services:
   db:
     image: postgres:16
@@ -15,6 +17,47 @@ services:
       timeout: 5s
       retries: 10
       start_period: 5s
+
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    working_dir: /app
+    init: true
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./config:/app/config
+      - ./db:/app/db
+      - ./scripts:/app/scripts
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./jest.config.cjs:/app/jest.config.cjs:ro
+      - ./package.json:/app/package.json:ro
+      - ./package-lock.json:/app/package-lock.json:ro
+    environment:
+      BAROTRADER_TEST_CONTAINER: "1"
+      NODE_ENV: test
+      APP_ENV: test
+      APP_HOST: ${APP_HOST:?Set APP_HOST}
+      APP_PORT: ${APP_PORT:?Set APP_PORT}
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_BASE_ROLE: ${DB_BASE_ROLE:?Set DB_BASE_ROLE}
+      TEST_DB: ${TEST_DB:?Set TEST_DB}
+      TEST_USER: ${TEST_USER:?Set TEST_USER}
+      TEST_PASSWORD: ${TEST_PASSWORD:?Set TEST_PASSWORD}
+      MIGRATION_DB: ${MIGRATION_DB:?Set MIGRATION_DB}
+      MIGRATION_USER: ${MIGRATION_USER:?Set MIGRATION_USER}
+      MIGRATION_PASSWORD: ${MIGRATION_PASSWORD:?Set MIGRATION_PASSWORD}
+      RUNTIME_DB: ${RUNTIME_DB:?Set RUNTIME_DB}
+      RUNTIME_USER: ${RUNTIME_USER:?Set RUNTIME_USER}
+      RUNTIME_PASSWORD: ${RUNTIME_PASSWORD:?Set RUNTIME_PASSWORD}
+      HASH_PEPPER: ${HASH_PEPPER:?Set HASH_PEPPER}
+      REGISTER_MIN_DELAY_MS: ${REGISTER_MIN_DELAY_MS:?Set REGISTER_MIN_DELAY_MS}
+      TEST_KEEP_DB: ${TEST_KEEP_DB:-0}
+    command: ["node", "scripts/test.js", "all"]
 
 volumes:
   pgdata_test:
