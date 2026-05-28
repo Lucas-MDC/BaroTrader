@@ -4,6 +4,9 @@
   "description": "BaroTrader application",
   "main": "src/index.js",
   "type": "module",
+  "engines": {
+    "node": ">=20.11.0"
+  },
   "scripts": {
     "start": "node src/index.js",
     "dev": "npm run build:frontend && node --watch src/index.js",
