@@ -11,7 +11,7 @@
 - `hotfix`: for critical, immediate production fixes
 - `test`: for experimenting outside of an issue/ticket
 
-### Reference
+### Reference (optional)
 Put the ID of the issue you're working on.
 
 ## Commit messages conventions:
