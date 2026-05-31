@@ -35,6 +35,6 @@ Put the ID of the issue you're working on.
 ---
 
 # References
+https://gist.github.com/qoomon/5dfcdf8eec66a051ecd85625518cfd13
 
-> https://gist.github.com/qoomon/5dfcdf8eec66a051ecd85625518cfd13
-> https://dev.to/varbsan/a-simplified-convention-for-naming-branches-and-commits-in-git-il4
+https://dev.to/varbsan/a-simplified-convention-for-naming-branches-and-commits-in-git-il4
