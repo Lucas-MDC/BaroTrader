@@ -1,0 +1,324 @@
+name: Validate Conventions
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+  push:
+    branches:
+      - "**"
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  validate-branch:
+    name: validate-branch
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate branch name
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const protectedBranches = new Set([
+              "main",
+              "master",
+              "develop",
+              "dev",
+              "staging",
+              "production",
+            ]);
+            const defaultBranch = context.payload.repository?.default_branch;
+
+            if (defaultBranch) {
+              protectedBranches.add(defaultBranch);
+            }
+
+            const validExamples = [
+              "feature/123/add-login-page",
+              "feature/PROJ-123/add-login-page",
+              "bugfix/456/fix-empty-response",
+              "hotfix/critical-auth-fix",
+              "test/try-new-cache-strategy",
+              "feature/add-login-page",
+            ];
+
+            function getBranchName() {
+              if (context.eventName === "pull_request") {
+                return context.payload.pull_request?.head?.ref;
+              }
+
+              if (context.eventName === "push") {
+                const ref = context.payload.ref || context.ref;
+                return ref?.startsWith("refs/heads/")
+                  ? ref.slice("refs/heads/".length)
+                  : ref;
+              }
+
+              return undefined;
+            }
+
+            const branchName = getBranchName();
+
+            if (!branchName) {
+              core.setFailed("Nao foi possivel identificar a branch para validacao.");
+              return;
+            }
+
+            if (protectedBranches.has(branchName)) {
+              core.info(`Branch "${branchName}" ignorada por ser protegida/default.`);
+              return;
+            }
+
+            const category = "(feature|bugfix|hotfix|test)";
+            const reference = "(?:[0-9]+|[A-Z]+-[0-9]+)";
+            const description = "[a-z][a-z0-9]*(?:-[a-z0-9]+)*";
+            const branchPattern = new RegExp(
+              `^${category}/(?:(?:${reference})/)?${description}$`
+            );
+
+            if (!branchPattern.test(branchName)) {
+              core.setFailed([
+                `Branch invalida: ${branchName}`,
+                "",
+                "Formato esperado:",
+                "- <category>/<reference>/description-in-kebab-case",
+                "- <category>/description-in-kebab-case",
+                "",
+                "Categorias permitidas:",
+                "- feature",
+                "- bugfix",
+                "- hotfix",
+                "- test",
+                "",
+                "Referencias aceitas:",
+                "- Numerica, exemplo: 123",
+                "- Ticket, exemplo: PROJ-123",
+                "",
+                "Exemplos validos:",
+                ...validExamples.map((example) => `- ${example}`),
+              ].join("\n"));
+              return;
+            }
+
+            core.info(`Branch valida: ${branchName}`);
+
+  validate-commits:
+    name: validate-commits
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate commit messages
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const allowedTypes = new Set([
+              "feat",
+              "fix",
+              "refactor",
+              "perf",
+              "style",
+              "test",
+              "docs",
+              "build",
+              "ops",
+              "chore",
+            ]);
+
+            const allowedScopes = [
+              // "api",
+              // "ui",
+              // "auth",
+              // "database",
+              // "ci",
+              // "docs",
+            ];
+
+            const validExamples = [
+              "feat: add login page",
+              "feat(api): add login endpoint",
+              "fix(ui): prevent duplicated submit",
+              "refactor(auth): simplify token validation",
+              "docs: update readme",
+              "ops(ci): add branch validation workflow",
+            ];
+
+            const zeroSha = "0000000000000000000000000000000000000000";
+
+            function commitHeader(message) {
+              return message.split(/\r?\n/, 1)[0];
+            }
+
+            function isAllowedAutomaticCommit(header) {
+              return /^Merge branch '.+' into .+$/.test(header)
+                || /^Merge pull request #[0-9]+ from .+$/.test(header)
+                || /^Revert ".+"$/.test(header);
+            }
+
+            function isTicketLikeScope(scope) {
+              return /^[0-9]+$/.test(scope)
+                || /^#[0-9]+$/.test(scope)
+                || /^[A-Z]+-[0-9]+$/.test(scope);
+            }
+
+            function validateHeader(header) {
+              const errors = [];
+
+              if (isAllowedAutomaticCommit(header)) {
+                return errors;
+              }
+
+              if (header.length > 100) {
+                errors.push("o header deve ter no maximo 100 caracteres");
+              }
+
+              const match = header.match(/^([a-z]+)(?:\(([^)]+)\))?: (.+)$/);
+
+              if (!match) {
+                errors.push(
+                  "o header deve seguir o formato <type>(<optional scope>): <description>"
+                );
+                return errors;
+              }
+
+              const [, type, scope, description] = match;
+
+              if (!allowedTypes.has(type)) {
+                errors.push(`type invalido "${type}"`);
+              }
+
+              if (scope) {
+                if (isTicketLikeScope(scope)) {
+                  errors.push(`scope nao pode ser identificador de issue/ticket: "${scope}"`);
+                }
+
+                if (allowedScopes.length > 0 && !allowedScopes.includes(scope)) {
+                  errors.push(`scope "${scope}" nao esta em allowedScopes`);
+                }
+              }
+
+              if (!description) {
+                errors.push("description e obrigatoria");
+              }
+
+              if (description.length > 100) {
+                errors.push("a description deve ter no maximo 100 caracteres");
+              }
+
+              if (!/^[a-z]/.test(description)) {
+                errors.push("a description deve comecar com letra minuscula");
+              }
+
+              if (description.endsWith(".")) {
+                errors.push("a description nao deve terminar com ponto final");
+              }
+
+              return errors;
+            }
+
+            async function getPullRequestCommits() {
+              const pullRequest = context.payload.pull_request;
+
+              if (!pullRequest) {
+                throw new Error("Payload de pull_request nao encontrado.");
+              }
+
+              const commits = await github.paginate(github.rest.pulls.listCommits, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pullRequest.number,
+                per_page: 100,
+              });
+
+              return commits.map((commit) => ({
+                sha: commit.sha,
+                message: commit.commit.message,
+              }));
+            }
+
+            function getPushCommits() {
+              if (context.payload.before === zeroSha) {
+                core.info("Push de criacao de branch detectado; validando commits do payload.");
+              }
+
+              return (context.payload.commits || []).map((commit) => ({
+                sha: commit.id,
+                message: commit.message,
+              }));
+            }
+
+            async function getCommits() {
+              if (context.eventName === "pull_request") {
+                return getPullRequestCommits();
+              }
+
+              if (context.eventName === "push") {
+                return getPushCommits();
+              }
+
+              return [];
+            }
+
+            const commits = await getCommits();
+
+            if (commits.length === 0) {
+              core.info("Nenhum commit encontrado para validar.");
+              return;
+            }
+
+            const invalidCommits = [];
+
+            for (const commit of commits) {
+              const header = commitHeader(commit.message);
+              const errors = validateHeader(header);
+
+              if (errors.length > 0) {
+                invalidCommits.push({
+                  sha: commit.sha,
+                  header,
+                  errors,
+                });
+              }
+            }
+
+            if (invalidCommits.length > 0) {
+              const details = invalidCommits.flatMap((commit) => [
+                `- ${commit.sha.slice(0, 7)}: ${commit.header}`,
+                ...commit.errors.map((error) => `  - ${error}`),
+              ]);
+
+              core.setFailed([
+                "Mensagens de commit invalidas:",
+                ...details,
+                "",
+                "Formato esperado:",
+                "- <type>(<optional scope>): <description>",
+                "",
+                "Tipos permitidos:",
+                "- feat",
+                "- fix",
+                "- refactor",
+                "- perf",
+                "- style",
+                "- test",
+                "- docs",
+                "- build",
+                "- ops",
+                "- chore",
+                "",
+                "Regras principais:",
+                "- type, dois pontos, espaco e description sao obrigatorios",
+                "- scope e opcional",
+                "- header e description devem ter no maximo 100 caracteres",
+                "- description deve comecar com letra minuscula",
+                "- description nao deve terminar com ponto final",
+                "- scope nao pode ser identificador de issue/ticket",
+                "",
+                "Exemplos validos:",
+                ...validExamples.map((example) => `- ${example}`),
+              ].join("\n"));
+              return;
+            }
+
+            core.info(`${commits.length} commit(s) validado(s) com sucesso.`);
