@@ -1,1 +1,1 @@
-node scripts/validate-commit-message.js "$1"
+node scripts/validate-conventions.js commit "$1"
