@@ -9,6 +9,7 @@
   },
   "scripts": {
     "start": "node src/index.js",
+    "prepare": "node -e \"const fs=require('node:fs');const cp=require('node:child_process');const bin=process.platform==='win32'?'node_modules/.bin/husky.cmd':'node_modules/.bin/husky';if(fs.existsSync('.git')&&fs.existsSync(bin)){process.exit(cp.spawnSync(bin,{stdio:'inherit',shell:process.platform==='win32'}).status??1);}\"",
     "dev": "npm run build:frontend && node --watch src/index.js",
     "dev:up": "node scripts/dev.js up",
     "dev:up:bg": "node scripts/dev.js up -d",
@@ -57,6 +58,7 @@
     "esbuild": "^0.28.0",
     "eslint": "^9.39.1",
     "globals": "^16.5.0",
+    "husky": "^9.1.7",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^30.2.0",
     "node-pg-migrate": "^8.0.4",
