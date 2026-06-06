@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const conventionsDoc = "/docs/conventions.md";
+const localConventionValidationEnabled = true;
 
 const protectedBranches = [
   "main",
@@ -226,6 +227,10 @@ function printUsage() {
 }
 
 function main() {
+  if (!localConventionValidationEnabled) {
+    return;
+  }
+
   const [, , command, ...args] = process.argv;
 
   switch (command) {
