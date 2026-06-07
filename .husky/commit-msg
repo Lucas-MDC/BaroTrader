@@ -1,0 +1,1 @@
+node scripts/validate-conventions.js commit "$1"

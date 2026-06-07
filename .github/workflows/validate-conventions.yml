@@ -1,0 +1,158 @@
+name: Validate Conventions
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+  push:
+    branches:
+      - "**"
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  validate-branch:
+    name: validate-branch
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate branch name
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const conventionsDoc = "/docs/conventions.md";
+            const protectedBranches = new Set([
+              "main",
+              "master",
+              "develop",
+              "dev",
+              "staging",
+              "production",
+              context.payload.repository?.default_branch,
+            ].filter(Boolean));
+            const allowedReferences = [
+              // "123",
+              // "PROJ-123",
+              // "ABC-456",
+              // "TASK-789",
+            ];
+
+            const branchName = context.eventName === "pull_request"
+              ? context.payload.pull_request?.head?.ref
+              : (context.payload.ref || context.ref || "").replace(/^refs\/heads\//, "");
+
+            if (!branchName) {
+              core.setFailed(`Convencao invalida. Consulte ${conventionsDoc}.`);
+              return;
+            }
+
+            if (protectedBranches.has(branchName)) {
+              return;
+            }
+
+            const branchMatch = branchName.match(
+              /^(?:feature|bugfix|hotfix|test)\/(?:(?<reference>[0-9]+|[A-Z]+-[0-9]+)\/)?[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/
+            );
+            const reference = branchMatch?.groups?.reference;
+
+            if (
+              !branchMatch
+              || (reference && allowedReferences.length > 0 && !allowedReferences.includes(reference))
+            ) {
+              core.setFailed(`Convencao invalida. Consulte ${conventionsDoc}.`);
+            }
+
+  validate-commits:
+    name: validate-commits
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate commit messages
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const conventionsDoc = "/docs/conventions.md";
+            const allowedTypes = new Set([
+              "feat",
+              "fix",
+              "refactor",
+              "perf",
+              "style",
+              "test",
+              "docs",
+              "build",
+              "ops",
+              "chore",
+            ]);
+
+            const allowedScopes = [
+              // "api",
+              // "ui",
+              // "auth",
+              // "database",
+              // "ci",
+              // "docs",
+            ];
+
+            function isAutomaticCommit(header) {
+              return /^Merge branch '.+' into .+$/.test(header)
+                || /^Merge pull request #[0-9]+ from .+$/.test(header)
+                || /^Revert ".+"$/.test(header);
+            }
+
+            function isTicketLikeScope(scope) {
+              return /^[0-9]+$/.test(scope)
+                || /^#[0-9]+$/.test(scope)
+                || /^[A-Z]+-[0-9]+$/.test(scope);
+            }
+
+            function isValidCommitMessage(message) {
+              const header = message.split(/\r?\n/, 1)[0];
+
+              if (isAutomaticCommit(header)) {
+                return true;
+              }
+
+              const match = header.match(/^([a-z]+)(?:\(([^)]+)\))?: (.+)$/);
+
+              if (!match || header.length > 100) {
+                return false;
+              }
+
+              const [, type, scope, description] = match;
+
+              return allowedTypes.has(type)
+                && description.length <= 100
+                && /^[a-z]/.test(description)
+                && !description.endsWith(".")
+                && (!scope || !isTicketLikeScope(scope))
+                && (!scope || allowedScopes.length === 0 || allowedScopes.includes(scope));
+            }
+
+            async function getCommits() {
+              if (context.eventName === "pull_request") {
+                return github.paginate(github.rest.pulls.listCommits, {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: context.payload.pull_request.number,
+                  per_page: 100,
+                });
+              }
+
+              if (context.eventName === "push") {
+                return context.payload.commits || [];
+              }
+
+              return [];
+            }
+
+            const commits = await getCommits();
+            const hasInvalidCommit = commits.some((commit) => {
+              const message = commit.message || commit.commit?.message || "";
+              return !isValidCommitMessage(message);
+            });
+
+            if (hasInvalidCommit) {
+              core.setFailed(`Convencao invalida. Consulte ${conventionsDoc}.`);
+            }
