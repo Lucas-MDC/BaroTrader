@@ -3,6 +3,7 @@ Validates canonical environment contracts for runtime and test workflows.
 */
 
 import {
+    getAuthConfig,
     getAppConfig,
     getBaseRole,
     getHashConfig,
@@ -18,6 +19,7 @@ function printUsage() {
 
 function validateRuntimeContract() {
     getAppConfig();
+    getAuthConfig();
     getBaseRole();
     getHashConfig();
     getRegisterConfig();

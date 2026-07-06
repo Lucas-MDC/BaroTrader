@@ -5,6 +5,7 @@ Express router that serves static assets and API routes.
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { requirePageAuth } from './auth/authMiddleware.js';
 import servicesRouter from './services/services.js';
 
 const router = express.Router();
@@ -17,9 +18,12 @@ const FRONTEND_SHELL = path.join(SRC_ROOT, 'frontend', 'index.html');
 const PUBLIC_ASSETS_DIR = path.join(SRC_ROOT, 'public', 'assets');
 const SHARED_DIR = path.join(SRC_ROOT, 'shared');
 
-const FRONTEND_ROUTES = [
+const PUBLIC_FRONTEND_ROUTES = [
   '/',
-  '/public/static/pages/noSession/register.html',
+  '/public/static/pages/noSession/register.html'
+];
+
+const PRIVATE_FRONTEND_ROUTES = [
   '/private/static/pages/homeInternal.html'
 ];
 
@@ -41,9 +45,12 @@ router.use('/api', servicesRouter);
 /*
 SPA entry points. Keep these explicit so /api/* never falls back to HTML.
 */
-router.get(FRONTEND_ROUTES, (req, res) => {
+function sendFrontendShell(req, res) {
   res.sendFile(FRONTEND_SHELL);
-});
+}
+
+router.get(PUBLIC_FRONTEND_ROUTES, sendFrontendShell);
+router.get(PRIVATE_FRONTEND_ROUTES, requirePageAuth, sendFrontendShell);
 
 /*
 Default 404 handler.

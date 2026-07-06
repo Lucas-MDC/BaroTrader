@@ -1,14 +1,22 @@
 import { useEffect } from 'react';
 import { HOME_ROUTE, redirectTo } from '../shared/navigation.js';
+import { logoutUser } from '../shared/sessionClient.js';
 
 export default function Account() {
   useEffect(() => {
     document.title = 'Account';
   }, []);
 
-  function handleLogout(event) {
+  async function handleLogout(event) {
     event.preventDefault();
-    redirectTo(HOME_ROUTE);
+
+    try {
+      await logoutUser();
+    } catch (err) {
+      console.error('Failed to logout', err);
+    } finally {
+      redirectTo(HOME_ROUTE);
+    }
   }
 
   return (
