@@ -1,61 +1,61 @@
 # Frontend React SPA Contract
 
-Este documento define o contrato vigente entre o frontend React, o roteamento
-HTTP do Express, os arquivos publicos e os servicos da aplicacao. As antigas
-paginas HTML individuais e seus caminhos `/public/static/pages/*` e
-`/private/static/pages/*` nao fazem mais parte do contrato.
+This document defines the current contract between the React frontend, Express
+HTTP routing, public files, and application services. The former individual
+HTML pages and their `/public/static/pages/*` and `/private/static/pages/*`
+paths are no longer part of the contract.
 
-## Responsabilidades
+## Responsibilities
 
 ### React
 
-- Renderiza as paginas da aplicacao.
-- Resolve navegacoes internas depois que o shell foi carregado.
-- Atualiza a URL e o historico do navegador por meio de `react-router-dom`.
-- Usa `Link` para links internos e `useNavigate` para navegacoes posteriores a
-  login, registro e logout.
+- Renders the application pages.
+- Handles internal navigation after the shell has loaded.
+- Updates the URL and browser history through `react-router-dom`.
+- Uses `Link` for internal links and `useNavigate` for navigation after login,
+  registration, and logout.
 
 ### Express
 
-- Entrega o mesmo shell `src/frontend/index.html` para rotas validas da SPA.
-- Entrega recursos publicos fixos por meio de `express.static`.
-- Entrega somente o bundle exato usado para iniciar a SPA, sem montar o
-  diretorio de build como um diretorio publico.
-- Processa servicos sob `/api` antes das rotas da SPA.
-- Retorna 404 para caminhos desconhecidos e nunca usa o shell como resposta de
-  fallback para `/api/*`.
+- Serves the same `src/frontend/index.html` shell for valid SPA routes.
+- Serves fixed public assets through `express.static`.
+- Serves only the exact bundle used to start the SPA, without mounting the
+  build directory as a public directory.
+- Processes services under `/api` before the SPA routes.
+- Returns 404 for unknown paths and never uses the shell as a fallback response
+  for `/api/*`.
 
-## Rotas canonicas da SPA
+## Canonical SPA routes
 
-| Pagina | Rota | Componente |
+| Page | Route | Component |
 | --- | --- | --- |
-| Home e login | `/` | `Home` |
-| Registro | `/register` | `Register` |
-| Conta | `/account` | `Account` |
+| Home and login | `/` | `Home` |
+| Registration | `/register` | `Register` |
+| Account | `/account` | `Account` |
 
-Em uma navegacao interna, essas mudancas de pagina nao geram uma nova
-requisicao de documento ao Express. Abrir uma rota diretamente, atualizar a
-pagina ou abrir um link em outra aba exige um GET inicial; nesse caso, o Express
-entrega o shell e o React renderiza a rota correspondente.
+During internal navigation, these page changes do not generate a new document
+request to Express. Opening a route directly, refreshing the page, or opening a
+link in another tab requires an initial GET; in that case, Express serves the
+shell and React renders the corresponding route.
 
-`/account` e uma rota visual publica. O seu esqueleto pode ser renderizado sem
-sessao. Dados privados exibidos futuramente nessa pagina devem vir de servicos
-protegidos com autenticacao, que constituem a fronteira real de seguranca.
+`/account` is a public UI route. Its shell can be rendered without a session.
+Private data displayed on this page in the future must come from
+authentication-protected services, which form the actual security boundary.
 
-## Ordem do roteamento HTTP
+## HTTP routing order
 
-O roteador Express deve manter esta precedencia:
+The Express router must maintain this precedence:
 
-1. Recursos fixos em `/static/assets`.
-2. Bundle exato em `/spa/app.js`.
-3. Servicos em `/api`.
-4. Shell para `/`, `/register` e `/account`.
-5. Resposta 404.
-6. Tratamento de erros.
+1. Fixed assets under `/static/assets`.
+2. Exact bundle at `/spa/app.js`.
+3. Services under `/api`.
+4. Shell for `/`, `/register`, and `/account`.
+5. 404 response.
+6. Error handling.
 
-## Recursos publicos fixos
+## Fixed public assets
 
-Arquivos versionados e publicos ficam sob `src/public/assets`:
+Versioned public files are stored under `src/public/assets`:
 
 ```text
 src/public/assets/
@@ -65,67 +65,67 @@ src/public/assets/
   fonts/
 ```
 
-Somente as subpastas `css`, `images`, `icons` e `fonts` sao montadas pelo
-Express sob `/static/assets`. Outros diretorios dentro de `assets`, inclusive um
-eventual `assets/build`, nao sao publicos. Exemplos:
+Only the `css`, `images`, `icons`, and `fonts` subdirectories are mounted by
+Express under `/static/assets`. Other directories inside `assets`, including a
+potential `assets/build`, are not public. Examples:
 
-| Arquivo | URL |
+| File | URL |
 | --- | --- |
 | `src/public/assets/css/style.css` | `/static/assets/css/style.css` |
 | `src/public/assets/images/logo.png` | `/static/assets/images/logo.png` |
 | `src/public/assets/icons/favicon.svg` | `/static/assets/icons/favicon.svg` |
 | `src/public/assets/fonts/inter.woff2` | `/static/assets/fonts/inter.woff2` |
 
-Diretorios nao devem oferecer listagem. Arquivos privados, uploads protegidos,
-configuracoes e segredos nao podem ser colocados nessa arvore.
+Directories must not provide listings. Private files, protected uploads,
+configuration, and secrets must not be placed in this tree.
 
-## Bundle da SPA
+## SPA bundle
 
-O esbuild gera somente:
+esbuild generates only:
 
 ```text
 src/public/build/app.js
 ```
 
-O diretorio `src/public/build` e ignorado pelo Git e nao e montado por
-`express.static`. O Express entrega o arquivo exato em:
+The `src/public/build` directory is ignored by Git and is not mounted by
+`express.static`. Express serves the exact file at:
 
 ```text
 GET /spa/app.js
 ```
 
-Essa URL precisa existir porque o navegador deve baixar o JavaScript que inicia
-a SPA. Ela pode ser aberta diretamente como qualquer recurso HTTP, mas nao
-permite acessar outros nomes ou navegar pelo diretorio de build.
+This URL must exist because the browser needs to download the JavaScript that
+starts the SPA. It can be opened directly like any HTTP resource, but it does
+not allow access to other filenames or browsing the build directory.
 
-## Servicos
+## Services
 
-As operacoes abaixo continuam sendo requisicoes ao backend porque criam,
-consultam ou removem recursos:
+The operations below remain backend requests because they create, retrieve, or
+remove resources:
 
-| Metodo e caminho | Responsabilidade |
+| Method and path | Responsibility |
 | --- | --- |
-| `POST /api/register` | Criar usuario e iniciar sua sessao |
-| `POST /api/login` | Autenticar usuario e iniciar sua sessao |
-| `DELETE /api/logout` | Encerrar a sessao atual |
+| `POST /api/register` | Create a user and start their session |
+| `POST /api/login` | Authenticate a user and start their session |
+| `DELETE /api/logout` | End the current session |
 
-Servicos protegidos futuros devem usar a autenticacao JWT antes de retornar
-informacoes da conta.
+Future protected services must use JWT authentication before returning account
+information.
 
-## Sessao criada pelo registro
+## Session created by registration
 
-Um registro bem-sucedido deve:
+A successful registration must:
 
-1. Criar o usuario.
-2. Emitir um JWT com a mesma politica usada pelo login.
-3. Gravar o JWT no mesmo cookie `HttpOnly`, `Secure` e `SameSite=Strict`.
-4. Retornar status 201 e somente dados publicos do usuario.
-5. Permitir que o React navegue para `/account` sem uma segunda chamada a
-   `/api/login` e sem recarregar o documento.
+1. Create the user.
+2. Issue a JWT with the same policy used by login.
+3. Store the JWT in the same `HttpOnly`, `Secure`, and `SameSite=Strict` cookie.
+4. Return status 201 and only the user's public data.
+5. Allow React to navigate to `/account` without a second call to `/api/login`
+   and without reloading the document.
 
 ## Home
 
-Contrato visual:
+UI contract:
 
 - `title`: `Home`
 - CSS global: `/static/assets/css/style.css`
@@ -134,32 +134,32 @@ Contrato visual:
 - `section#login-area`
 - `section#register-area`
 
-IDs e textos:
+IDs and text:
 
 - `#username-login`, `type="text"`, `placeholder="Username"`
 - `#password-login`, `type="password"`, `placeholder="Password"`
-- `#login-button`, texto `Login`
-- Link `Create an account`, com destino `/register`
+- `#login-button`, text `Login`
+- `Create an account` link targeting `/register`
 
-Fluxo:
+Flow:
 
-- O submit chama `POST /api/login`.
-- Sucesso navega para `/account` pelo React Router.
-- Erros permanecem na pagina e exibem feedback.
+- Submission calls `POST /api/login`.
+- Success navigates to `/account` through React Router.
+- Errors remain on the page and display feedback.
 
 ## Register
 
-Contrato visual:
+UI contract:
 
 - `title`: `Register`
 - CSS global: `/static/assets/css/style.css`
 - `header > h1`: `Register`
-- `header .header-right > a`: `Back`, com destino `/`
+- `header .header-right > a`: `Back`, targeting `/`
 - `main > div.container`
 - `section#register-area`
 - `form#register-form`
 
-IDs e validacao:
+IDs and validation:
 
 - `#username-email`
   - `type="text"`
@@ -179,38 +179,39 @@ IDs e validacao:
   - `pattern="^(?=.*[A-Za-z])(?=.*\d)[\x21-\x7E]{8,64}$"`
   - `minlength="8"`
   - `maxlength="64"`
-- `#register-button`, texto `Register`
+- `#register-button`, text `Register`
 - `#register-feedback`, `aria-live="polite"`
 
-Fluxo:
+Flow:
 
-- O submit chama `POST /api/register` uma unica vez.
-- `username` e normalizado e `password` preserva o valor digitado.
+- Submission calls `POST /api/register` exactly once.
+- `username` is normalized and `password` preserves the entered value.
 - `409`: `User already exists.`
 - `400`: `Username or password is invalid.`
-- Outros erros: `data.error || 'Unable to create your account.'`
-- Sucesso: `Registration complete! Redirecting...`
-- O atraso visual permanece em 600 ms.
-- A navegacao para `/account` usa o React Router.
+- Other errors: `data.error || 'Unable to create your account.'`
+- Success: `Registration complete! Redirecting...`
+- The visual delay remains 600 ms.
+- Navigation to `/account` uses React Router.
 
 ## Account
 
-Contrato visual:
+UI contract:
 
 - `title`: `Account`
 - CSS global: `/static/assets/css/style.css`
 - `header > h1`: `Account`
-- `#logout-button`, texto `Logout`
-- Itens de navegacao: `Inventory`, `Market`, `Settings`
+- `#logout-button`, text `Logout`
+- Navigation items: `Inventory`, `Market`, `Settings`
 
-Fluxo:
+Flow:
 
-- A pagina pode renderizar seu esqueleto sem autenticacao.
-- O logout chama `DELETE /api/logout`.
-- Ao terminar, o React Router navega para `/` sem recarregar o documento.
+- The page can render its shell without authentication.
+- Logout calls `DELETE /api/logout`.
+- When complete, React Router navigates to `/` without reloading the document.
 
-## CSS global preservado
+## Preserved global CSS
 
-O CSS global fica em `src/public/assets/css/style.css`. O markup React preserva
-os seletores `header`, `header h1`, `.header-right`, `div.container`,
-`div.container input`, `div.container button`, `section`, `nav ul` e `nav ul li`.
+The global CSS is stored in `src/public/assets/css/style.css`. The React markup
+preserves the `header`, `header h1`, `.header-right`, `div.container`,
+`div.container input`, `div.container button`, `section`, `nav ul`, and
+`nav ul li` selectors.
