@@ -87,9 +87,10 @@ file, or a future vault. They must not be defined in `.env`.
 ### GitHub Actions
 
 - The workflow is the operational authority.
-- Temporarily, repository `secrets` feed the job and the PostgreSQL service
-  container; workflow comments mark values that should move back to variables or
-  environment-scoped configuration.
+- Repository `vars` provide non-sensitive CI configuration, including the
+  credentials used only by the ephemeral PostgreSQL test service.
+- Repository `secrets` provide the JWT signing secret, hash pepper, and the
+  runtime and migration passwords.
 - Tests consume the job environment; they do not bootstrap CI infrastructure by
   discovering it dynamically.
 
