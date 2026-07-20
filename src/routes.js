@@ -5,7 +5,6 @@ Express router that serves static assets and API routes.
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { requirePageAuth } from './auth/authMiddleware.js';
 import servicesRouter from './services/services.js';
 
 const router = express.Router();
@@ -15,27 +14,33 @@ const __dirname = path.dirname(__filename);
 
 const SRC_ROOT = path.join(__dirname);
 const FRONTEND_SHELL = path.join(SRC_ROOT, 'frontend', 'index.html');
+const FRONTEND_BUNDLE = path.join(SRC_ROOT, 'public', 'build', 'app.js');
 const PUBLIC_ASSETS_DIR = path.join(SRC_ROOT, 'public', 'assets');
-const SHARED_DIR = path.join(SRC_ROOT, 'shared');
+const PUBLIC_ASSET_TYPES = ['css', 'images', 'icons', 'fonts'];
 
-const PUBLIC_FRONTEND_ROUTES = [
+const FRONTEND_ROUTES = [
   '/',
-  '/public/static/pages/noSession/register.html'
-];
-
-const PRIVATE_FRONTEND_ROUTES = [
-  '/private/static/pages/homeInternal.html'
+  '/register',
+  '/account'
 ];
 
 /*
-Shared static assets for the SPA shell.
+Fixed public assets such as stylesheets and images.
 */
-router.use('/static/shared', express.static(SHARED_DIR));
+PUBLIC_ASSET_TYPES.forEach((assetType) => {
+  router.use(
+    `/static/assets/${assetType}`,
+    express.static(path.join(PUBLIC_ASSETS_DIR, assetType))
+  );
+});
 
 /*
-Compiled frontend assets.
+The SPA bundle is deliberately exposed as one exact resource. The build
+directory is not mounted through express.static.
 */
-router.use('/public/static/assets', express.static(PUBLIC_ASSETS_DIR));
+router.get('/spa/app.js', (_req, res) => {
+  res.sendFile(FRONTEND_BUNDLE);
+});
 
 /*
 API routes.
@@ -49,8 +54,7 @@ function sendFrontendShell(req, res) {
   res.sendFile(FRONTEND_SHELL);
 }
 
-router.get(PUBLIC_FRONTEND_ROUTES, sendFrontendShell);
-router.get(PRIVATE_FRONTEND_ROUTES, requirePageAuth, sendFrontendShell);
+router.get(FRONTEND_ROUTES, sendFrontendShell);
 
 /*
 Default 404 handler.

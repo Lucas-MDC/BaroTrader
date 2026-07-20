@@ -1,8 +1,11 @@
 import { useEffect } from 'react';
-import { HOME_ROUTE, redirectTo } from '../shared/navigation.js';
+import { useNavigate } from 'react-router-dom';
+import { HOME_ROUTE } from '../shared/navigation.js';
 import { logoutUser } from '../shared/sessionClient.js';
 
 export default function Account() {
+  const navigate = useNavigate();
+
   useEffect(() => {
     document.title = 'Account';
   }, []);
@@ -15,7 +18,7 @@ export default function Account() {
     } catch (err) {
       console.error('Failed to logout', err);
     } finally {
-      redirectTo(HOME_ROUTE);
+      navigate(HOME_ROUTE, { replace: true });
     }
   }
 

@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from '../routes.jsx';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   ACCOUNT_ROUTE,
-  HOME_ROUTE,
-  redirectTo
+  HOME_ROUTE
 } from '../shared/navigation.js';
 import {
   FEEDBACK_COLORS,
@@ -25,6 +24,7 @@ const initialFeedback = {
 };
 
 export default function Register() {
+  const navigate = useNavigate();
   const formRef = useRef(null);
   const usernameRef = useRef(null);
   const passwordRef = useRef(null);
@@ -74,7 +74,7 @@ export default function Register() {
 
       showMessage('Registration complete! Redirecting...');
       window.setTimeout(() => {
-        redirectTo(ACCOUNT_ROUTE);
+        navigate(ACCOUNT_ROUTE, { replace: true });
       }, REGISTER_SUCCESS_REDIRECT_DELAY_MS);
     } catch (err) {
       console.error('Failed to register user', err);

@@ -2,7 +2,7 @@ import passport from 'passport';
 
 function authenticateJwt(req, res, next, onFailure) {
   /*
-  APIs and pages share validation but differ in failure responses.
+  Authenticate API requests with the JWT stored in the session cookie.
   */
   passport.authenticate('jwt', { session: false }, (error, user) => {
     if (error) return next(error);
@@ -16,11 +16,5 @@ function authenticateJwt(req, res, next, onFailure) {
 export function requireApiAuth(req, res, next) {
   return authenticateJwt(req, res, next, (_req, response) =>
     response.status(401).json({ error: 'Authentication required.' })
-  );
-}
-
-export function requirePageAuth(req, res, next) {
-  return authenticateJwt(req, res, next, (_req, response) =>
-    response.redirect('/')
   );
 }

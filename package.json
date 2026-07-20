@@ -17,8 +17,8 @@
     "dev:reset": "node scripts/dev.js reset",
     "dev:bootstrap": "node scripts/dev.js bootstrap",
     "dev:open": "node scripts/dev.js open",
-    "build:frontend": "esbuild src/frontend/main.jsx --bundle --outfile=src/public/assets/build/app.js --format=esm --jsx=automatic --minify",
-    "watch:frontend": "esbuild src/frontend/main.jsx --bundle --outfile=src/public/assets/build/app.js --format=esm --jsx=automatic --sourcemap --watch",
+    "build:frontend": "esbuild src/frontend/main.jsx --bundle --outfile=src/public/build/app.js --format=esm --jsx=automatic --minify",
+    "watch:frontend": "esbuild src/frontend/main.jsx --bundle --outfile=src/public/build/app.js --format=esm --jsx=automatic --sourcemap --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "validate:env:runtime": "node scripts/validate-env.js runtime",
@@ -69,6 +69,7 @@
     "node-pg-migrate": "^8.0.4",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "react-router-dom": "^7.18.1",
     "supertest": "^6.3.4"
   }
 }

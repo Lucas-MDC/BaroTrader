@@ -1,22 +1,22 @@
 /** @jest-environment jsdom */
 import { jest } from '@jest/globals';
+import { TextDecoder, TextEncoder } from 'node:util';
+
+global.TextDecoder = TextDecoder;
+global.TextEncoder = TextEncoder;
 
 /**
  * This test suite covers the integration between the real registration React
  * page and its client-side dependencies. The tests are grouped together because
  * they exercise the browser's high-level flow in jsdom: page rendering, form
- * validation, HTTP calls, feedback, and redirection.
+ * validation, HTTP calls, feedback, and SPA navigation.
  */
-const HOME_ROUTE = '/';
-const REGISTER_ROUTE = '/public/static/pages/noSession/register.html';
-const ACCOUNT_ROUTE = '/private/static/pages/homeInternal.html';
-const FRONTEND_ROUTES = [HOME_ROUTE, REGISTER_ROUTE, ACCOUNT_ROUTE];
-
-const redirectToMock = jest.fn();
-const navigateToMock = jest.fn();
+const REGISTER_ROUTE = '/register';
+const ACCOUNT_ROUTE = '/account';
 
 let root;
 let act;
+let currentPath;
 
 const flushPromises = async () => {
   await Promise.resolve();
@@ -26,6 +26,7 @@ const flushPromises = async () => {
 async function loadPage({ includeFeedback = true } = {}) {
   const react = await import('react');
   const reactDom = await import('react-dom/client');
+  const { MemoryRouter, useLocation } = await import('react-router-dom');
   const { default: Register } = await import(
     '../../src/frontend/pages/Register.jsx'
   );
@@ -36,8 +37,20 @@ async function loadPage({ includeFeedback = true } = {}) {
   document.body.append(container);
   root = reactDom.createRoot(container);
 
+  function LocationObserver() {
+    currentPath = useLocation().pathname;
+    return null;
+  }
+
   await act(async () => {
-    root.render(react.createElement(Register));
+    root.render(
+      react.createElement(
+        MemoryRouter,
+        { initialEntries: [REGISTER_ROUTE] },
+        react.createElement(Register),
+        react.createElement(LocationObserver)
+      )
+    );
   });
 
   if (!includeFeedback) {
@@ -82,16 +95,6 @@ function mockFetchResponse({ ok = true, status = 200, json, jsonThrows } = {}) {
 describe('register client jsdom integration', () => {
   beforeEach(() => {
     jest.resetModules();
-    redirectToMock.mockReset();
-    navigateToMock.mockReset();
-    jest.unstable_mockModule('../../src/frontend/shared/navigation.js', () => ({
-      ACCOUNT_ROUTE,
-      FRONTEND_ROUTES,
-      HOME_ROUTE,
-      REGISTER_ROUTE,
-      navigateTo: navigateToMock,
-      redirectTo: redirectToMock
-    }));
     global.IS_REACT_ACT_ENVIRONMENT = true;
     global.fetch = jest.fn();
   });
@@ -105,6 +108,7 @@ describe('register client jsdom integration', () => {
 
     root = undefined;
     act = undefined;
+    currentPath = undefined;
     jest.useRealTimers();
     jest.restoreAllMocks();
     delete global.fetch;
@@ -196,10 +200,10 @@ describe('register client jsdom integration', () => {
       expect(['#047857', 'rgb(4, 120, 87)']).toContain(feedback.style.color);
 
       advanceTimersByTime(599);
-      expect(redirectToMock).not.toHaveBeenCalled();
+      expect(currentPath).toBe(REGISTER_ROUTE);
 
       advanceTimersByTime(1);
-      expect(redirectToMock).toHaveBeenCalledWith(ACCOUNT_ROUTE);
+      expect(currentPath).toBe(ACCOUNT_ROUTE);
     } finally {
       runOnlyPendingTimers();
       jest.useRealTimers();
@@ -225,7 +229,7 @@ describe('register client jsdom integration', () => {
       await submitForm(form);
 
       advanceTimersByTime(600);
-      expect(redirectToMock).toHaveBeenCalledWith(ACCOUNT_ROUTE);
+      expect(currentPath).toBe(ACCOUNT_ROUTE);
     } finally {
       runOnlyPendingTimers();
       jest.useRealTimers();
@@ -251,7 +255,7 @@ describe('register client jsdom integration', () => {
 
     expect(feedback.textContent).toBe('User already exists.');
     expect(['#b91c1c', 'rgb(185, 28, 28)']).toContain(feedback.style.color);
-    expect(redirectToMock).not.toHaveBeenCalled();
+    expect(currentPath).toBe(REGISTER_ROUTE);
   });
 
   test('400 responses show invalid message and no redirect', async () => {
@@ -273,7 +277,7 @@ describe('register client jsdom integration', () => {
 
     expect(feedback.textContent).toBe('Username or password is invalid.');
     expect(['#b91c1c', 'rgb(185, 28, 28)']).toContain(feedback.style.color);
-    expect(redirectToMock).not.toHaveBeenCalled();
+    expect(currentPath).toBe(REGISTER_ROUTE);
   });
 
   test('non-ok responses show server error when provided', async () => {
@@ -348,7 +352,7 @@ describe('register client jsdom integration', () => {
         'Network error while attempting to register.'
       );
       expect(['#b91c1c', 'rgb(185, 28, 28)']).toContain(feedback.style.color);
-      expect(redirectToMock).not.toHaveBeenCalled();
+      expect(currentPath).toBe(REGISTER_ROUTE);
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Failed to register user',
@@ -380,7 +384,7 @@ describe('register client jsdom integration', () => {
 
       expect(feedback.textContent).toBe('Registration complete! Redirecting...');
       advanceTimersByTime(600);
-      expect(redirectToMock).toHaveBeenCalledWith(ACCOUNT_ROUTE);
+      expect(currentPath).toBe(ACCOUNT_ROUTE);
     } finally {
       runOnlyPendingTimers();
       jest.useRealTimers();

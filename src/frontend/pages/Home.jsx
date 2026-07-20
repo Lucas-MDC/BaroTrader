@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from '../routes.jsx';
-import { ACCOUNT_ROUTE, REGISTER_ROUTE, redirectTo } from '../shared/navigation.js';
+import { Link, useNavigate } from 'react-router-dom';
+import { ACCOUNT_ROUTE, REGISTER_ROUTE } from '../shared/navigation.js';
 import {
   getLoginErrorMessage,
   loginUser
@@ -12,6 +12,7 @@ const feedbackColors = {
 };
 
 export default function Home() {
+  const navigate = useNavigate();
   const formRef = useRef(null);
   const usernameRef = useRef(null);
   const passwordRef = useRef(null);
@@ -55,7 +56,7 @@ export default function Home() {
         return;
       }
 
-      redirectTo(ACCOUNT_ROUTE);
+      navigate(ACCOUNT_ROUTE, { replace: true });
     } catch (err) {
       console.error('Failed to login', err);
       setFeedback('Network error while attempting to login.');

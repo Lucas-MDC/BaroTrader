@@ -2,44 +2,12 @@
 HTTP routes for stateless session management.
 */
 
-import jwt from 'jsonwebtoken';
 import passport from 'passport';
 import { Router } from 'express';
-import { getAuthConfig } from '../../../config/index.js';
 import { INVALID_CREDENTIALS_MESSAGE, logout } from './sessionService.js';
+import { clearSessionCookie, issueSessionCookie } from './sessionCookie.js';
 
 const router = Router();
-
-function buildCookieOptions(authConfig) {
-  return {
-    httpOnly: authConfig.cookieHttpOnly,
-    secure: authConfig.cookieSecure,
-    sameSite: authConfig.cookieSameSite,
-    maxAge: authConfig.jwtExpiresInSeconds * 1000,
-    path: '/'
-  };
-}
-
-function buildClearCookieOptions(authConfig) {
-  return {
-    httpOnly: authConfig.cookieHttpOnly,
-    secure: authConfig.cookieSecure,
-    sameSite: authConfig.cookieSameSite,
-    path: '/'
-  };
-}
-
-function signSessionToken(user, authConfig) {
-  return jwt.sign(
-    { username: user.username },
-    authConfig.jwtSecret,
-    {
-      algorithm: authConfig.jwtAlgorithm,
-      expiresIn: authConfig.jwtExpiresInSeconds,
-      subject: String(user.id)
-    }
-  );
-}
 
 function handleLogin(req, res, next) {
   passport.authenticate('local', { session: false }, (error, user, info) => {
@@ -51,27 +19,15 @@ function handleLogin(req, res, next) {
       });
     }
 
-    const authConfig = getAuthConfig();
-    const token = signSessionToken(user, authConfig);
-
-    res.cookie(
-      authConfig.jwtCookieName,
-      token,
-      buildCookieOptions(authConfig)
-    );
+    issueSessionCookie(res, user);
 
     return res.status(200).json({ user });
   })(req, res, next);
 }
 
 function handleLogout(_req, res) {
-  const authConfig = getAuthConfig();
   logout();
-
-  res.clearCookie(
-    authConfig.jwtCookieName,
-    buildClearCookieOptions(authConfig)
-  );
+  clearSessionCookie(res);
 
   return res.status(204).end();
 }

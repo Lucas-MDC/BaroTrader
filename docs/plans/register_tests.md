@@ -138,7 +138,7 @@ Mock classification report:
 - `docs/plans/register_integration_mocks_report.md`
 
 <a id="reg-int-001"></a>
-#### REG-INT-001: register.html basic rendering
+#### REG-INT-001: Register component basic rendering
 Source: FE-REG-001
 Conditions:
 - The page loads with <form id="register-form">.
@@ -260,6 +260,7 @@ Source: API-REG-001 to API-REG-005
 Conditions:
 - Uses `tests/integration/registerApi.http-contract.test.js`.
 - Validates HTTP contract behavior for 201, 400, 409, 500, payload parsing, and response shape.
+- A successful 201 response issues the authenticated session cookie.
 - Uses service mocking intentionally for route contract isolation.
 
 <a id="reg-int-017"></a>
@@ -269,6 +270,7 @@ Conditions:
 - Uses `tests/integration/registerApi.backend-smoke.test.js`.
 - Executes full backend path (route -> service -> model -> PostgreSQL).
 - Success responses never expose `passwordHash` or `passwordSalt`.
+- Success responses issue the authenticated session cookie.
 
 <a id="reg-int-018"></a>
 #### REG-INT-018: register API invalid payload on real backend (`_new_`)
@@ -308,7 +310,7 @@ Conditions:
 - User navigates to the register page and submits valid credentials.
 - The browser issues POST /api/register with JSON payload.
 - A success message appears and a redirect occurs after ~600ms.
-- The user lands on /private/static/pages/homeInternal.html.
+- The user lands on /account through SPA navigation.
 
 <a id="reg-e2e-002"></a>
 #### REG-E2E-002: client-side invalid input prevents submission

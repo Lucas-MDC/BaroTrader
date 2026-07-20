@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { getAuthConfig } from '../../config/index.js';
 import { createIntegrationDbHarness } from './support/dbHarness.js';
 
 /**
@@ -48,6 +49,9 @@ describe('register API backend smoke', () => {
     );
     expect(response.body.passwordHash).toBeUndefined();
     expect(response.body.passwordSalt).toBeUndefined();
+
+    const { jwtCookieName } = getAuthConfig();
+    expect(response.headers['set-cookie'][0]).toContain(`${jwtCookieName}=`);
 
     const persisted = await getUserModel().findByUsername(username);
     expect(persisted).toEqual(
