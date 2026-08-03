@@ -1,14 +1,25 @@
 import { useEffect } from 'react';
-import { HOME_ROUTE, redirectTo } from '../shared/navigation.js';
+import { useNavigate } from 'react-router-dom';
+import { HOME_ROUTE } from '../shared/navigation.js';
+import { logoutUser } from '../shared/sessionClient.js';
 
 export default function Account() {
+  const navigate = useNavigate();
+
   useEffect(() => {
     document.title = 'Account';
   }, []);
 
-  function handleLogout(event) {
+  async function handleLogout(event) {
     event.preventDefault();
-    redirectTo(HOME_ROUTE);
+
+    try {
+      await logoutUser();
+    } catch (err) {
+      console.error('Failed to logout', err);
+    } finally {
+      navigate(HOME_ROUTE, { replace: true });
+    }
   }
 
   return (

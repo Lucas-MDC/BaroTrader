@@ -18,12 +18,14 @@ RUN npm ci --omit=dev --no-audit --no-fund
 COPY config ./config
 COPY db ./db
 COPY src/app.js src/index.js src/routes.js ./src/
+COPY src/auth ./src/auth
 COPY src/db ./src/db
+COPY src/middleware ./src/middleware
 COPY src/models ./src/models
 COPY src/services ./src/services
-COPY src/shared/css ./src/shared/css
+COPY src/public/assets ./src/public/assets
 COPY src/frontend/index.html ./src/frontend/index.html
-COPY --from=builder /app/src/public/assets/build ./src/public/assets/build
+COPY --from=builder /app/src/public/build ./src/public/build
 
 ENV NODE_ENV=production
 

@@ -1,74 +1,165 @@
-# Frontend React Migration Contract
+# Frontend React SPA Contract
 
-Este documento registra o comportamento As-Is das telas HTML/JS antes da migracao
-para React. A migracao deve preservar a experiencia do cliente final e alterar
-apenas a implementacao interna.
+This document defines the current contract between the React frontend, Express
+HTTP routing, public files, and application services. The former individual
+HTML pages and their `/public/static/pages/*` and `/private/static/pages/*`
+paths are no longer part of the contract.
 
-## Rotas antigas e equivalentes
+## Responsibilities
 
-| Tela | Rota antiga | Rota React esperada |
+### React
+
+- Renders the application pages.
+- Handles internal navigation after the shell has loaded.
+- Updates the URL and browser history through `react-router-dom`.
+- Uses `Link` for internal links and `useNavigate` for navigation after login,
+  registration, and logout.
+
+### Express
+
+- Serves the same `src/frontend/index.html` shell for valid SPA routes.
+- Serves fixed public assets through `express.static`.
+- Serves only the exact bundle used to start the SPA, without mounting the
+  build directory as a public directory.
+- Processes services under `/api` before the SPA routes.
+- Returns 404 for unknown paths and never uses the shell as a fallback response
+  for `/api/*`.
+
+## Canonical SPA routes
+
+| Page | Route | Component |
 | --- | --- | --- |
-| Home | `/` | `/` |
-| Register | `/public/static/pages/noSession/register.html` | `/public/static/pages/noSession/register.html` |
-| Account | `/private/static/pages/homeInternal.html` | `/private/static/pages/homeInternal.html` |
+| Home and login | `/` | `Home` |
+| Registration | `/register` | `Register` |
+| Account | `/account` | `Account` |
 
-As rotas antigas continuam validas durante a migracao para nao quebrar links,
-redirects e testes futuros. O Express deve servir `/api/*` antes do fallback da
-SPA e nao deve retornar HTML da SPA para erros de API.
+During internal navigation, these page changes do not generate a new document
+request to Express. Opening a route directly, refreshing the page, or opening a
+link in another tab requires an initial GET; in that case, Express serves the
+shell and React renders the corresponding route.
+
+`/account` is a public UI route. Its shell can be rendered without a session.
+Private data displayed on this page in the future must come from
+authentication-protected services, which form the actual security boundary.
+
+## HTTP routing order
+
+The Express router must maintain this precedence:
+
+1. Fixed assets under `/static/assets`.
+2. Exact bundle at `/spa/app.js`.
+3. Services under `/api`.
+4. Shell for `/`, `/register`, and `/account`.
+5. 404 response.
+6. Error handling.
+
+## Fixed public assets
+
+Versioned public files are stored under `src/public/assets`:
+
+```text
+src/public/assets/
+  css/
+  images/
+  icons/
+  fonts/
+```
+
+Only the `css`, `images`, `icons`, and `fonts` subdirectories are mounted by
+Express under `/static/assets`. Other directories inside `assets`, including a
+potential `assets/build`, are not public. Examples:
+
+| File | URL |
+| --- | --- |
+| `src/public/assets/css/style.css` | `/static/assets/css/style.css` |
+| `src/public/assets/images/logo.png` | `/static/assets/images/logo.png` |
+| `src/public/assets/icons/favicon.svg` | `/static/assets/icons/favicon.svg` |
+| `src/public/assets/fonts/inter.woff2` | `/static/assets/fonts/inter.woff2` |
+
+Directories must not provide listings. Private files, protected uploads,
+configuration, and secrets must not be placed in this tree.
+
+## SPA bundle
+
+esbuild generates only:
+
+```text
+src/public/build/app.js
+```
+
+The `src/public/build` directory is ignored by Git and is not mounted by
+`express.static`. Express serves the exact file at:
+
+```text
+GET /spa/app.js
+```
+
+This URL must exist because the browser needs to download the JavaScript that
+starts the SPA. It can be opened directly like any HTTP resource, but it does
+not allow access to other filenames or browsing the build directory.
+
+## Services
+
+The operations below remain backend requests because they create, retrieve, or
+remove resources:
+
+| Method and path | Responsibility |
+| --- | --- |
+| `POST /api/register` | Create a user and start their session |
+| `POST /api/login` | Authenticate a user and start their session |
+| `DELETE /api/logout` | End the current session |
+
+Future protected services must use JWT authentication before returning account
+information.
+
+## Session created by registration
+
+A successful registration must:
+
+1. Create the user.
+2. Issue a JWT with the same policy used by login.
+3. Store the JWT in the same `HttpOnly`, `Secure`, and `SameSite=Strict` cookie.
+4. Return status 201 and only the user's public data.
+5. Allow React to navigate to `/account` without a second call to `/api/login`
+   and without reloading the document.
 
 ## Home
 
-Fonte antiga:
+UI contract:
 
-- HTML: `src/public/pages/home.html`
-- JS: `src/public/assets/js/home.js`
-
-Contrato visual:
-
-- `html[lang="en"]`
-- `meta charset="UTF-8"`
 - `title`: `Home`
-- CSS global: `/static/shared/css/style.css`
+- CSS global: `/static/assets/css/style.css`
 - `header > h1`: `Home`
 - `main > div.container`
 - `section#login-area`
 - `section#register-area`
 
-IDs e textos:
+IDs and text:
 
-- `#login-area`
 - `#username-login`, `type="text"`, `placeholder="Username"`
 - `#password-login`, `type="password"`, `placeholder="Password"`
-- `#login-button`, texto `Login`
-- Link `Create an account`
+- `#login-button`, text `Login`
+- `Create an account` link targeting `/register`
 
-Links e redirects:
+Flow:
 
-- Link de cadastro: `/public/static/pages/noSession/register.html`
-- Click em `#login-button`: `event.preventDefault()` e redirect para
-  `/private/static/pages/homeInternal.html`
+- Submission calls `POST /api/login`.
+- Success navigates to `/account` through React Router.
+- Errors remain on the page and display feedback.
 
 ## Register
 
-Fonte antiga:
+UI contract:
 
-- HTML: `src/public/pages/noSession/register.html`
-- JS: `src/public/assets/js/register.js`
-
-Contrato visual:
-
-- `html[lang="en"]`
-- `meta charset="UTF-8"`
-- `meta name="viewport" content="width=device-width, initial-scale=1.0"`
 - `title`: `Register`
-- CSS global: `/static/shared/css/style.css`
+- CSS global: `/static/assets/css/style.css`
 - `header > h1`: `Register`
-- `header .header-right > a`: `Back`
+- `header .header-right > a`: `Back`, targeting `/`
 - `main > div.container`
 - `section#register-area`
 - `form#register-form`
 
-IDs, textos e atributos nativos:
+IDs and validation:
 
 - `#username-email`
   - `type="text"`
@@ -79,7 +170,6 @@ IDs, textos e atributos nativos:
   - `pattern="^[a-z0-9](?:[a-z0-9._-]{1,30}[a-z0-9])?$"`
   - `minlength="1"`
   - `maxlength="32"`
-  - `title="Use 1-32 characters: lowercase letters, numbers, dot, underscore, or hyphen."`
 - `#password-register`
   - `type="password"`
   - `name="password"`
@@ -89,74 +179,39 @@ IDs, textos e atributos nativos:
   - `pattern="^(?=.*[A-Za-z])(?=.*\d)[\x21-\x7E]{8,64}$"`
   - `minlength="8"`
   - `maxlength="64"`
-  - `title="Use 8-64 characters with at least one letter and one number."`
-- `#register-button`, `type="submit"`, texto `Register`
+- `#register-button`, text `Register`
 - `#register-feedback`, `aria-live="polite"`
 
-Links, fetch e redirects:
+Flow:
 
-- Link `Back`: `/`
-- Submit chama `fetch('/api/register')`
-- Metodo: `POST`
-- Header: `{ 'Content-Type': 'application/json' }`
-- Body: `{ username, password }`
-- `username` e trimado antes do envio
-- `password` preserva o valor digitado
-- Se o form nao existe: `Registration form is unavailable.`
-- Se `checkValidity()` falha: chama `reportValidity()` e nao faz fetch
+- Submission calls `POST /api/register` exactly once.
+- `username` is normalized and `password` preserves the entered value.
 - `409`: `User already exists.`
 - `400`: `Username or password is invalid.`
-- Outros erros HTTP: `data.error || 'Unable to create your account.'`
-- Sucesso: `Registration complete! Redirecting...`
-- Delay de sucesso: `600 ms`
-- Redirect apos sucesso: `/private/static/pages/homeInternal.html`
-- Erro de rede: loga `Failed to register user` e mostra
-  `Network error while attempting to register.`
-
-Mensagens e cores:
-
-- Erro: `#b91c1c`
-- Sucesso: `#047857`
+- Other errors: `data.error || 'Unable to create your account.'`
+- Success: `Registration complete! Redirecting...`
+- The visual delay remains 600 ms.
+- Navigation to `/account` uses React Router.
 
 ## Account
 
-Fonte antiga:
+UI contract:
 
-- HTML: `src/private/pages/homeInternal.html`
-- JS: `src/private/assets/js/logged.js`
-
-Contrato visual:
-
-- `html[lang="en"]`
-- `meta charset="UTF-8"`
-- `meta name="viewport" content="width=device-width, initial-scale=1.0"`
 - `title`: `Account`
-- CSS global: `/static/shared/css/style.css`
+- CSS global: `/static/assets/css/style.css`
 - `header > h1`: `Account`
-- `header .header-right`
-- `nav > ul`
-- `main` vazio
+- `#logout-button`, text `Logout`
+- Navigation items: `Inventory`, `Market`, `Settings`
 
-IDs e textos:
+Flow:
 
-- `#logout-button`, texto `Logout`
-- Itens de navegacao: `Inventory`, `Market`, `Settings`
+- The page can render its shell without authentication.
+- Logout calls `DELETE /api/logout`.
+- When complete, React Router navigates to `/` without reloading the document.
 
-Links e redirects:
+## Preserved global CSS
 
-- Click em `#logout-button`: `event.preventDefault()` e redirect para `/`
-
-## CSS global preservado
-
-O CSS global continua em `src/shared/css/style.css`. A estrutura React deve gerar
-markup compativel com estes seletores ja existentes:
-
-- `header`
-- `header h1`
-- `.header-right`
-- `div.container`
-- `div.container input`
-- `div.container button`
-- `section`
-- `nav ul`
-- `nav ul li`
+The global CSS is stored in `src/public/assets/css/style.css`. The React markup
+preserves the `header`, `header h1`, `.header-right`, `div.container`,
+`div.container input`, `div.container button`, `section`, `nav ul`, and
+`nav ul li` selectors.

@@ -3,6 +3,7 @@ HTTP routes for user registration.
 */
 
 import { Router } from 'express';
+import { issueSessionCookie } from '../session/sessionCookie.js';
 import { RegistrationError, registerUser } from './registerService.js';
 
 const router = Router();
@@ -16,6 +17,8 @@ router.post('/register', async (req, res) => {
     try {
         const { username, password } = req.body || {};
         const user = await registerUser({ username, password });
+
+        issueSessionCookie(res, user);
 
         return res.status(201).json({
             id: user.id,

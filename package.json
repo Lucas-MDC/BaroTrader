@@ -17,8 +17,8 @@
     "dev:reset": "node scripts/dev.js reset",
     "dev:bootstrap": "node scripts/dev.js bootstrap",
     "dev:open": "node scripts/dev.js open",
-    "build:frontend": "esbuild src/frontend/main.jsx --bundle --outfile=src/public/assets/build/app.js --format=esm --jsx=automatic --minify",
-    "watch:frontend": "esbuild src/frontend/main.jsx --bundle --outfile=src/public/assets/build/app.js --format=esm --jsx=automatic --sourcemap --watch",
+    "build:frontend": "esbuild src/frontend/main.jsx --bundle --outfile=src/public/build/app.js --format=esm --jsx=automatic --minify",
+    "watch:frontend": "esbuild src/frontend/main.jsx --bundle --outfile=src/public/build/app.js --format=esm --jsx=automatic --sourcemap --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "validate:env:runtime": "node scripts/validate-env.js runtime",
@@ -48,9 +48,14 @@
   },
   "homepage": "https://github.com/Lucas-MDC/BaroTrader#readme",
   "dependencies": {
+    "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.3",
     "dotenv-expand": "^10.0.0",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "passport-local": "^1.0.0",
     "pg-promise": "^12.3.0"
   },
   "devDependencies": {
@@ -64,6 +69,7 @@
     "node-pg-migrate": "^8.0.4",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "react-router-dom": "^7.18.1",
     "supertest": "^6.3.4"
   }
 }

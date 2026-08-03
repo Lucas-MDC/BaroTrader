@@ -1,4 +1,4 @@
-import { Route, Routes } from './routes.jsx';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import Register from './pages/Register.jsx';
 import Account from './pages/Account.jsx';
@@ -10,10 +10,11 @@ import {
 
 export default function App() {
   return (
-    <Routes fallback={<Home />}>
+    <Routes>
       <Route path={HOME_ROUTE} element={<Home />} />
       <Route path={REGISTER_ROUTE} element={<Register />} />
       <Route path={ACCOUNT_ROUTE} element={<Account />} />
+      <Route path="*" element={<Navigate to={HOME_ROUTE} replace />} />
     </Routes>
   );
 }

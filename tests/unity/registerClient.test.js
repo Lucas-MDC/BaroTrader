@@ -5,11 +5,23 @@
  * form elements are unavailable.
  */
 import { jest } from '@jest/globals';
+import { TextDecoder, TextEncoder } from 'node:util';
 import { act, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
-import Register from '../../src/frontend/pages/Register.jsx';
+
+global.TextDecoder = TextDecoder;
+global.TextEncoder = TextEncoder;
 
 let root;
+let MemoryRouter;
+let Register;
+
+beforeAll(async () => {
+  ({ MemoryRouter } = await import('react-router-dom'));
+  ({ default: Register } = await import(
+    '../../src/frontend/pages/Register.jsx'
+  ));
+});
 
 async function renderRegister() {
   const container = document.createElement('div');
@@ -17,7 +29,13 @@ async function renderRegister() {
   root = createRoot(container);
 
   await act(async () => {
-    root.render(createElement(Register));
+    root.render(
+      createElement(
+        MemoryRouter,
+        { initialEntries: ['/register'] },
+        createElement(Register)
+      )
+    );
   });
 }
 

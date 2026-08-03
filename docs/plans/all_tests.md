@@ -168,7 +168,7 @@ Deprecated files:
 - `tests/integration/registerHtml.test.js` (`_deprecated_`)
 
 <a id="reg-int-001"></a>
-#### REG-INT-001: register.html basic rendering
+#### REG-INT-001: Register component basic rendering
 Source: FE-REG-001
 Conditions:
 - The page loads with <form id="register-form">.
@@ -290,6 +290,7 @@ Source: API-REG-001 to API-REG-005
 Conditions:
 - Uses `tests/integration/registerApi.http-contract.test.js`.
 - Validates HTTP contract behavior for 201, 400, 409, 500, payload parsing, and response shape.
+- A successful 201 response issues the authenticated session cookie.
 - Uses service mocking intentionally for route contract isolation.
 
 <a id="reg-int-017"></a>
@@ -299,6 +300,7 @@ Conditions:
 - Uses `tests/integration/registerApi.backend-smoke.test.js`.
 - Executes full backend path (route -> service -> model -> PostgreSQL).
 - Success responses never expose `passwordHash` or `passwordSalt`.
+- Success responses issue the authenticated session cookie.
 
 <a id="reg-int-018"></a>
 #### REG-INT-018: register API invalid payload on real backend (`_new_`)
@@ -338,7 +340,7 @@ Conditions:
 - User navigates to the register page and submits valid credentials.
 - The browser issues POST /api/register with JSON payload.
 - A success message appears and a redirect occurs after ~600ms.
-- The user lands on /private/static/pages/homeInternal.html.
+- The user lands on /account through SPA navigation.
 
 <a id="reg-e2e-002"></a>
 #### REG-E2E-002: client-side invalid input prevents submission
@@ -450,27 +452,27 @@ Conditions:
 ### Unit
 
 <a id="nav-unit-001"></a>
-#### NAV-UNIT-001: home.js login redirect
+#### NAV-UNIT-001: Home login navigation
 Source: Added
 Conditions:
 - Clicking #login-button prevents default behavior.
-- window.location.href is set to /private/static/pages/homeInternal.html.
+- React Router navigates to /account.
 
 <a id="nav-unit-002"></a>
-#### NAV-UNIT-002: home.js missing button
+#### NAV-UNIT-002: Home missing button
 Source: Added
 Conditions:
 - Missing #login-button does not throw.
 
 <a id="nav-unit-003"></a>
-#### NAV-UNIT-003: logged.js logout redirect
+#### NAV-UNIT-003: Account logout navigation
 Source: Added
 Conditions:
 - Clicking #logout-button prevents default behavior.
-- window.location.href is set to /.
+- React Router navigates to /.
 
 <a id="nav-unit-004"></a>
-#### NAV-UNIT-004: logged.js missing button
+#### NAV-UNIT-004: Account missing button
 Source: Added
 Conditions:
 - Missing #logout-button does not throw.
@@ -479,52 +481,52 @@ Conditions:
 ### Integration
 
 <a id="nav-int-001"></a>
-#### NAV-INT-001: home.html base rendering
+#### NAV-INT-001: Home component base rendering
 Source: Added
 Conditions:
 - The page renders a header with an h1.
 - #login-area contains #username-login, #password-login, and #login-button.
 - #register-area contains a link to create an account.
-- The stylesheet /static/shared/css/style.css is referenced.
-- The script /public/static/assets/js/home.js is referenced as a module.
+- The stylesheet /static/assets/css/style.css is referenced.
+- The script /spa/app.js is referenced as a module.
 
 <a id="nav-int-002"></a>
 #### NAV-INT-002: register link target
 Source: Added
 Conditions:
-- The register link points to /public/static/pages/noSession/register.html.
+- The register link points to /register.
 
 <a id="nav-int-003"></a>
-#### NAV-INT-003: homeInternal.html base rendering
+#### NAV-INT-003: Account component base rendering
 Source: Added
 Conditions:
 - The page renders a header with an h1.
 - #logout-button is present.
 - The nav contains list items for Inventory, Market, and Settings.
-- The script /private/static/assets/js/logged.js is referenced as a module.
+- The SPA shell references /spa/app.js as a module.
 
 <a id="nav-int-004"></a>
 #### NAV-INT-004: shared styles applied
 Source: Added
 Conditions:
-- Pages include /static/shared/css/style.css.
+- Pages include /static/assets/css/style.css.
 - Body background and header styles match the CSS rules.
 
 <a id="navigation-e2e"></a>
 ### End-to-End
 
 <a id="nav-e2e-001"></a>
-#### NAV-E2E-001: home to private navigation
+#### NAV-E2E-001: home to account navigation
 Source: Added
 Conditions:
 - Visiting / loads the home page.
-- Clicking Login navigates to /private/static/pages/homeInternal.html.
+- Clicking Login navigates to /account through React Router.
 
 <a id="nav-e2e-002"></a>
 #### NAV-E2E-002: logout navigation
 Source: Added
 Conditions:
-- Visiting the private home page shows the Logout button.
+- Visiting /account shows the Logout button.
 - Clicking Logout navigates back to /.
 
 <a id="nav-e2e-003"></a>
@@ -540,7 +542,7 @@ Conditions:
 #### NAV-A11Y-001: language attribute
 Source: Added
 Conditions:
-- Home and internal pages include lang="en" on the html element.
+- Home and account pages include lang="en" on the html element.
 
 <a id="nav-a11y-002"></a>
 #### NAV-A11Y-002: button accessible names
@@ -565,7 +567,7 @@ Conditions:
 - Header, container, and form blocks match baseline layout and colors.
 
 <a id="nav-vis-002"></a>
-#### NAV-VIS-002: private page visual regression
+#### NAV-VIS-002: account page visual regression
 Source: Added
 Conditions:
 - Header and nav layout match baseline styling.
@@ -586,31 +588,28 @@ Conditions:
 #### SRV-INT-001: root entrypoint
 Source: Added
 Conditions:
-- GET / returns home.html with status 200.
-- The response body includes the Home page markup.
+- GET / returns the SPA shell with status 200.
+- The response body includes the React root element.
 
 <a id="srv-int-002"></a>
 #### SRV-INT-002: shared static assets
 Source: Added
 Conditions:
-- GET /static/shared/css/style.css returns 200.
-- GET /static/shared/js/utils.js returns 200.
+- GET /static/assets/css/style.css returns 200.
 
 <a id="srv-int-003"></a>
-#### SRV-INT-003: public static assets and pages
+#### SRV-INT-003: SPA bundle and public entry points
 Source: Added
 Conditions:
-- GET /public/static/assets/js/home.js returns 200.
-- GET /public/static/assets/js/register.js returns 200.
-- GET /public/static/pages/home.html returns 200.
-- GET /public/static/pages/noSession/register.html returns 200.
+- GET /spa/app.js returns the compiled SPA bundle.
+- The build directory is not exposed through express.static.
+- GET / and GET /register return the SPA shell.
 
 <a id="srv-int-004"></a>
-#### SRV-INT-004: private static assets and pages
+#### SRV-INT-004: account SPA entrypoint
 Source: Added
 Conditions:
-- GET /private/static/assets/js/logged.js returns 200.
-- GET /private/static/pages/homeInternal.html returns 200.
+- GET /account returns the SPA shell without page-level authentication.
 
 <a id="srv-int-005"></a>
 #### SRV-INT-005: API router mount

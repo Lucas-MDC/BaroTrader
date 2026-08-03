@@ -23,6 +23,7 @@ jest.unstable_mockModule('../../src/services/register/registerService.js', () =>
 }));
 
 const { createApp } = await import('../../src/app.js');
+const { getAuthConfig } = await import('../../config/index.js');
 
 describe('register API HTTP contract', () => {
   beforeEach(() => {
@@ -57,6 +58,13 @@ describe('register API HTTP contract', () => {
     });
     expect(response.body.passwordHash).toBeUndefined();
     expect(response.body.passwordSalt).toBeUndefined();
+
+    const { jwtCookieName } = getAuthConfig();
+    const [sessionCookie] = response.headers['set-cookie'];
+    expect(sessionCookie).toContain(`${jwtCookieName}=`);
+    expect(sessionCookie).toContain('HttpOnly');
+    expect(sessionCookie).toContain('Secure');
+    expect(sessionCookie).toContain('SameSite=Strict');
   });
 
   test('empty body returns 400 with invalid message', async () => {

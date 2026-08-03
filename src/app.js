@@ -1,11 +1,11 @@
 import express from 'express';
+import { installAppMiddleware } from './middleware/appMiddleware.js';
 import routes from './routes.js';
 
 function createApp() {
   const app = express();
 
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: false }));
+  installAppMiddleware(app);
   app.use(routes);
 
   return app;

@@ -4,7 +4,10 @@ import { defineConfig } from "eslint/config";
 
 export default defineConfig([
   {
-    ignores: ["src/public/assets/build/**"],
+    ignores: [
+      "src/public/build/**",
+      "src/public/assets/build/**",
+    ],
   },
   {
     files: ["src/frontend/**/*.{js,jsx}"],

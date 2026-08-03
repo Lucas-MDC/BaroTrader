@@ -9,13 +9,37 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 let loaded = false;
+const ENV_FILE_FORBIDDEN_KEYS = [
+    'BAROTRADER_JWT_SECRET',
+    'BAROTRADER_JWT_SECRET_FILE'
+];
 const FILE_ENV_KEYS = [
     'BAROTRADER_DB_ADMIN_PASSWORD',
     'MIGRATION_PASSWORD',
     'RUNTIME_PASSWORD',
     'TEST_PASSWORD',
-    'HASH_PEPPER'
+    'HASH_PEPPER',
+    'BAROTRADER_JWT_SECRET'
 ];
+
+function assertForbiddenEnvFileKeys(envPath) {
+    /*
+    Some secrets must come from the process environment, secret files, or a
+    future vault, never from the local .env defaults file.
+    */
+    if (!fs.existsSync(envPath)) return;
+
+    const parsed = dotenv.parse(fs.readFileSync(envPath, 'utf8'));
+    const forbiddenKeys = ENV_FILE_FORBIDDEN_KEYS.filter((key) =>
+        Object.prototype.hasOwnProperty.call(parsed, key)
+    );
+
+    if (forbiddenKeys.length > 0) {
+        throw new Error(
+            `${forbiddenKeys.join(', ')} must not be defined in .env. Use system environment variables or *_FILE secrets.`
+        );
+    }
+}
 
 export function loadEnv() {
     /*
@@ -26,6 +50,8 @@ export function loadEnv() {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
     const envPath = path.resolve(__dirname, '..', '.env');
+
+    assertForbiddenEnvFileKeys(envPath);
 
     const result = dotenv.config({ path: envPath, quiet: true });
     if (typeof dotenvExpand.expand === 'function') {

@@ -7,4 +7,4 @@ export { getAdminDbConfig, getBaseRole } from './db.admin.js';
 export { getMigrationsDbConfig } from './db.migrations.js';
 export { getRuntimeDbConfig } from './db.runtime.js';
 export { getTestAdminDbConfig } from './db.test.js';
-export { getHashConfig, getRegisterConfig } from './security.js';
+export { getAuthConfig, getHashConfig, getRegisterConfig } from './security.js';

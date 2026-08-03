@@ -13,6 +13,7 @@ Setup:
 
 ```bash
 cp .env.example .env
+export BAROTRADER_JWT_SECRET="$(openssl rand -base64 32)"
 npm install
 npm run dev:up
 ```
@@ -49,6 +50,16 @@ URL-based and alias-based contract has been removed from the public interface.
 - `DB_BASE_ROLE`
 - `HASH_PEPPER`
 - `REGISTER_MIN_DELAY_MS`
+- `BAROTRADER_LOGIN_RESPONSE_DEADLINE_MS`
+- `BAROTRADER_JWT_EXPIRES_IN_SECONDS`
+- `BAROTRADER_JWT_COOKIE_NAME`
+
+### Required system/vault secrets
+
+These values must come from system environment variables, CI secrets, a secret
+file, or a future vault. They must not be defined in `.env`.
+
+- `BAROTRADER_JWT_SECRET`
 
 ### Secrets from files
 
@@ -59,6 +70,7 @@ URL-based and alias-based contract has been removed from the public interface.
 - `MIGRATION_PASSWORD`
 - `TEST_PASSWORD`
 - `HASH_PEPPER`
+- `BAROTRADER_JWT_SECRET`
 
 ## Operational doctrine
 
@@ -66,6 +78,8 @@ URL-based and alias-based contract has been removed from the public interface.
 
 - `docker compose` is the operational authority.
 - `.env` provides local defaults.
+- System/vault secrets such as `BAROTRADER_JWT_SECRET` must be exported in the
+  shell or supplied through `*_FILE`; they must not be written to `.env`.
 - Exported shell variables override `.env`.
 - `compose.dev.yaml` consumes the variables explicitly; there are no credentials
   or URLs hardcoded in the Compose file.
@@ -73,9 +87,10 @@ URL-based and alias-based contract has been removed from the public interface.
 ### GitHub Actions
 
 - The workflow is the operational authority.
-- Temporarily, repository `secrets` feed the job and the PostgreSQL service
-  container; workflow comments mark values that should move back to variables or
-  environment-scoped configuration.
+- Repository `vars` provide non-sensitive CI configuration, including the
+  credentials used only by the ephemeral PostgreSQL test service.
+- Repository `secrets` provide the JWT signing secret, hash pepper, and the
+  runtime and migration passwords.
 - Tests consume the job environment; they do not bootstrap CI infrastructure by
   discovering it dynamically.
 
