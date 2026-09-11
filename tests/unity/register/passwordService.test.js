@@ -9,12 +9,12 @@ import crypto from 'crypto';
  */
 const getHashConfig = jest.fn();
 
-jest.unstable_mockModule('../../config/index.js', () => ({
+jest.unstable_mockModule('../../../config/index.js', () => ({
   getHashConfig
 }));
 
 const { createPasswordSalt, hashPassword } = await import(
-  '../../src/services/register/passwordService.js'
+  '../../../src/services/register/passwordService.js'
 );
 
 describe('passwordService', () => {
@@ -119,4 +119,3 @@ describe('passwordService', () => {
     expect(first).not.toBe(second);
   });
 });
-

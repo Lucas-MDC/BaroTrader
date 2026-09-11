@@ -2,12 +2,12 @@
 ### Integration
 
 Current files:
-- `tests/integration/loginApi.http-contract.test.js` (`_new_`)
-- `tests/integration/loginClient.jsdom.test.js` (`_new_`)
-- `tests/integration/loginService.db-integration.test.js` (`_new_`)
+- [tests/integration/login/loginApi.http-contract.test.js](../../../../tests/integration/login/loginApi.http-contract.test.js)
+- [tests/integration/login/loginClient.jsdom.test.js](../../../../tests/integration/login/loginClient.jsdom.test.js)
+- [tests/integration/login/loginService.db-integration.test.js](../../../../tests/integration/login/loginService.db-integration.test.js)
 
 <a id="login-int-001"></a>
-#### LOGIN-INT-001: Login component basic rendering
+#### ✅ LOGIN-INT-001: Login component basic rendering
 Source: Added
 Conditions:
 - The page loads with #login-form.
@@ -17,7 +17,7 @@ Conditions:
 - The username and password inputs use the expected autocomplete values.
 
 <a id="login-int-002"></a>
-#### LOGIN-INT-002: submit with invalid inputs
+#### ✅ LOGIN-INT-002: submit with invalid inputs
 Source: Added
 Conditions:
 - Empty username or password is blocked by browser constraint validation.
@@ -25,7 +25,7 @@ Conditions:
 - Missing #login-feedback does not break the validation flow.
 
 <a id="login-int-003"></a>
-#### LOGIN-INT-003: successful submit
+#### ✅ LOGIN-INT-003: successful submit
 Source: Added
 Conditions:
 - Valid inputs trigger fetch POST /api/login.
@@ -35,7 +35,7 @@ Conditions:
 - Navigation replaces the login history entry.
 
 <a id="login-int-004"></a>
-#### LOGIN-INT-004: invalid credentials response
+#### ✅ LOGIN-INT-004: invalid credentials response
 Source: Added
 Conditions:
 - A 401 response displays "Invalid username or password." in error color.
@@ -43,7 +43,7 @@ Conditions:
 - The response does not expose whether the username exists.
 
 <a id="login-int-005"></a>
-#### LOGIN-INT-005: other API error responses
+#### ✅ LOGIN-INT-005: other API error responses
 Source: Added
 Conditions:
 - Non-401 non-ok responses display data.error when present.
@@ -51,42 +51,42 @@ Conditions:
 - No navigation occurs for an API error.
 
 <a id="login-int-006"></a>
-#### LOGIN-INT-006: network failure
+#### ✅ LOGIN-INT-006: network failure
 Source: Added
 Conditions:
 - fetch rejecting displays "Network error while attempting to login.".
 - No navigation occurs on network failure.
 
 <a id="login-int-007"></a>
-#### LOGIN-INT-007: login API HTTP contract
+#### ✅ LOGIN-INT-007: login API HTTP contract
 Source: Added
 Conditions:
-- Uses `tests/integration/loginApi.http-contract.test.js`.
+- Uses `tests/integration/login/loginApi.http-contract.test.js`.
 - Valid credentials return HTTP 200 with the public user only.
 - Successful responses issue the authenticated session cookie.
 - Invalid credentials return HTTP 401 with the public error message.
 - Malformed or incomplete payloads do not reach a successful authentication path.
 
 <a id="login-int-008"></a>
-#### LOGIN-INT-008: login service with real DB
+#### ✅ LOGIN-INT-008: login service with real DB
 Source: Added
 Conditions:
-- Uses `tests/integration/loginService.db-integration.test.js`.
+- Uses `tests/integration/login/loginService.db-integration.test.js`.
 - A user persisted by the registration service can authenticate with the correct password.
 - The result contains id, username, and createdAt but no password hash or salt.
 
 <a id="login-int-009"></a>
-#### LOGIN-INT-009: wrong password with real DB
+#### ✅ LOGIN-INT-009: wrong password with real DB
 Source: Added
 Conditions:
-- Uses `tests/integration/loginService.db-integration.test.js`.
+- Uses `tests/integration/login/loginService.db-integration.test.js`.
 - A wrong password raises SessionError with status 401.
 - The response behavior matches an unknown username.
 
 <a id="login-int-010"></a>
-#### LOGIN-INT-010: login minimum response deadline
+#### ✅ LOGIN-INT-010: login minimum response deadline
 Source: Added
 Conditions:
-- Uses `tests/integration/loginService.db-integration.test.js`.
+- Uses `tests/integration/login/loginService.db-integration.test.js`.
 - Successful and unsuccessful responses do not complete before loginResponseDeadlineMs.
 - A zero loginResponseDeadlineMs configuration completes without an extra wait.

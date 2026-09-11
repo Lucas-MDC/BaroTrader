@@ -31,6 +31,26 @@ To calculate coverage:
 npm run test:coverage
 ```
 
+### Browser E2E tests
+
+Install the Playwright Chromium browser once on a new machine or CI runner:
+
+```bash
+npx playwright install --with-deps chromium
+```
+
+Run the registration and login browser suites:
+
+```bash
+npm run test:e2e
+```
+
+The E2E runner validates the test environment, starts the local PostgreSQL base
+when running outside CI, provisions and migrates the logical test database,
+builds the frontend, starts the application through Playwright's web server,
+and cleans up the database and server after the run. GitHub Actions supplies
+PostgreSQL as a service and runs the same command after installing Chromium.
+
 ### Coverage exclusions
 
 Coverage is controlled by `collectCoverageFrom` and `coveragePathIgnorePatterns` in

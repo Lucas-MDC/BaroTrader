@@ -28,7 +28,7 @@ async function loadPage({ includeFeedback = true } = {}) {
   const reactDom = await import('react-dom/client');
   const { MemoryRouter, useLocation } = await import('react-router-dom');
   const { default: Register } = await import(
-    '../../src/frontend/pages/Register.jsx'
+    '../../../src/frontend/pages/Register.jsx'
   );
 
   act = react.act;
@@ -324,6 +324,32 @@ describe('register client jsdom integration', () => {
 
     expect(feedback.textContent).toBe('Unable to create your account.');
     expect(['#b91c1c', 'rgb(185, 28, 28)']).toContain(feedback.style.color);
+  });
+
+  test('server feedback is rendered as text instead of HTML', async () => {
+    // REG-UNIT-004: safe registration feedback rendering
+    await loadPage();
+
+    const usernameInput = document.querySelector('#username-email');
+    const passwordInput = document.querySelector('#password-register');
+    const feedback = document.querySelector('#register-feedback');
+    const form = document.querySelector('#register-form');
+    const unsafeMessage = '<img src=x onerror=alert(1)>Account error.';
+
+    usernameInput.value = 'user';
+    passwordInput.value = 'Pass1234!';
+    form.checkValidity = () => true;
+    mockFetchResponse({
+      ok: false,
+      status: 500,
+      json: { error: unsafeMessage }
+    });
+
+    await submitForm(form);
+
+    expect(feedback.textContent).toBe(unsafeMessage);
+    expect(feedback.querySelector('img')).toBeNull();
+    expect(feedback.innerHTML).toContain('&lt;img');
   });
 
   test('network failures show a network error message', async () => {

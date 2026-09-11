@@ -72,5 +72,11 @@ jobs:
       - name: Build frontend
         run: npm run build:frontend
 
-      - name: Run tests
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run unit and integration tests
         run: npm test
+
+      - name: Run browser E2E tests
+        run: npm run test:e2e

@@ -7,7 +7,7 @@ import {
   PASSWORD_PATTERN,
   USERNAME_PATTERN,
   getCredentialsFromInputs
-} from '../../src/frontend/shared/validation.js';
+} from '../../../src/frontend/shared/validation.js';
 
 describe('registration validation patterns', () => {
   test('username pattern accepts normalized usernames', () => {

@@ -2,10 +2,10 @@
 ### Integration
 
 Current files:
-- `tests/integration/registerApi.http-contract.test.js` (`_new_`)
-- `tests/integration/registerClient.jsdom.test.js` (`_new_`)
-- `tests/integration/registerService.db-integration.test.js` (`_new_`)
-- `tests/integration/registerApi.backend-smoke.test.js` (`_new_`)
+- [tests/integration/register/registerApi.http-contract.test.js](../../../../tests/integration/register/registerApi.http-contract.test.js)
+- [tests/integration/register/registerClient.jsdom.test.js](../../../../tests/integration/register/registerClient.jsdom.test.js)
+- [tests/integration/register/registerService.db-integration.test.js](../../../../tests/integration/register/registerService.db-integration.test.js)
+- [tests/integration/register/registerApi.backend-smoke.test.js](../../../../tests/integration/register/registerApi.backend-smoke.test.js)
 
 Deprecated files:
 - `tests/integration/registerApi.test.js` (`_deprecated_`)
@@ -124,19 +124,20 @@ Conditions:
 - Replaced by REG-INT-016 (`_new_`) and REG-INT-017 (`_new_`).
 
 <a id="reg-int-015"></a>
-#### REG-INT-015: UI copy matches current implementation
+#### ✅ REG-INT-015: UI copy and safe feedback match current implementation
 Source: Added
 Conditions:
 - 409 responses show "User already exists.".
 - 400 responses show "Username or password is invalid.".
 - Generic non-ok responses show "Unable to create your account." when data.error is absent.
 - Network failures show "Network error while attempting to register.".
+- HTML-looking server feedback is rendered as text.
 
 <a id="reg-int-016"></a>
 #### ✅ REG-INT-016: register API HTTP contract (`_new_`)
 Source: API-REG-001 to API-REG-005
 Conditions:
-- Uses `tests/integration/registerApi.http-contract.test.js`.
+- Uses `tests/integration/register/registerApi.http-contract.test.js`.
 - Validates HTTP contract behavior for 201, 400, 409, 500, payload parsing, and response shape.
 - A successful 201 response issues the authenticated session cookie.
 - Uses service mocking intentionally for route contract isolation.
@@ -145,7 +146,7 @@ Conditions:
 #### ✅ REG-INT-017: register API backend smoke with real DB (`_new_`)
 Source: API-REG-001 and API-REG-003
 Conditions:
-- Uses `tests/integration/registerApi.backend-smoke.test.js`.
+- Uses `tests/integration/register/registerApi.backend-smoke.test.js`.
 - Executes full backend path (route -> service -> model -> PostgreSQL).
 - Success responses never expose `passwordHash` or `passwordSalt`.
 - Success responses issue the authenticated session cookie.
@@ -154,26 +155,26 @@ Conditions:
 #### ✅ REG-INT-018: register API invalid payload on real backend (`_new_`)
 Source: API-REG-002
 Conditions:
-- Uses `tests/integration/registerApi.backend-smoke.test.js`.
+- Uses `tests/integration/register/registerApi.backend-smoke.test.js`.
 - Invalid username/password payloads return HTTP 400 on the real backend stack.
 
 <a id="reg-int-019"></a>
 #### ✅ REG-INT-019: register service persistence with real DB (`_new_`)
 Source: REG-SVC-003
 Conditions:
-- Uses `tests/integration/registerService.db-integration.test.js`.
+- Uses `tests/integration/register/registerService.db-integration.test.js`.
 - `registerUser` persists user data and generated hash/salt in PostgreSQL.
 
 <a id="reg-int-020"></a>
 #### ✅ REG-INT-020: register service duplicate handling with real DB (`_new_`)
 Source: REG-SVC-002
 Conditions:
-- Uses `tests/integration/registerService.db-integration.test.js`.
+- Uses `tests/integration/register/registerService.db-integration.test.js`.
 - Duplicate usernames raise `RegistrationError` with status 409.
 
 <a id="reg-int-021"></a>
 #### ✅ REG-INT-021: register service validation with real DB (`_new_`)
 Source: REG-SVC-001
 Conditions:
-- Uses `tests/integration/registerService.db-integration.test.js`.
+- Uses `tests/integration/register/registerService.db-integration.test.js`.
 - Invalid payloads raise `RegistrationError` with status 400.

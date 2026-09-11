@@ -1,4 +1,4 @@
-import { createIntegrationDbHarness } from './support/dbHarness.js';
+import { createIntegrationDbHarness } from '../support/dbHarness.js';
 
 /**
  * This test suite covers the registration service integrated with a real database.
@@ -19,9 +19,9 @@ beforeAll(async () => {
   await harness.setup();
 
   ({ registerUser, RegistrationError } = await import(
-    '../../src/services/register/registerService.js'
+    '../../../src/services/register/registerService.js'
   ));
-  ({ getUserModel } = await import('../../src/models/user/index.js'));
+  ({ getUserModel } = await import('../../../src/models/user/index.js'));
 }, dbHookTimeoutMs);
 
 afterAll(async () => {

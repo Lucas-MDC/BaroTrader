@@ -17,13 +17,13 @@ class RegistrationError extends Error {
   }
 }
 
-jest.unstable_mockModule('../../src/services/register/registerService.js', () => ({
+jest.unstable_mockModule('../../../src/services/register/registerService.js', () => ({
   registerUser,
   RegistrationError
 }));
 
-const { createApp } = await import('../../src/app.js');
-const { getAuthConfig } = await import('../../config/index.js');
+const { createApp } = await import('../../../src/app.js');
+const { getAuthConfig } = await import('../../../config/index.js');
 
 describe('register API HTTP contract', () => {
   beforeEach(() => {

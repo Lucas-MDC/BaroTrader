@@ -12,3 +12,9 @@
 | Security | [Security](security_tests.md) |
 | Performance and Resilience | [Performance and Resilience](performance_and_resilience_tests.md) |
 | Accessibility | [Accessibility](accessibility_tests.md) |
+
+Implemented suites:
+- Unit: [tests/unity/login](../../../../tests/unity/login/)
+- Integration: [tests/integration/login](../../../../tests/integration/login/)
+- End-to-End: [tests/e2e/login.spec.js](../../../../tests/e2e/login.spec.js)
+- Execution: [Execution](execution.md)
