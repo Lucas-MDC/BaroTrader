@@ -19,7 +19,7 @@ let Register;
 beforeAll(async () => {
   ({ MemoryRouter } = await import('react-router-dom'));
   ({ default: Register } = await import(
-    '../../src/frontend/pages/Register.jsx'
+    '../../../src/frontend/pages/Register.jsx'
   ));
 });
 

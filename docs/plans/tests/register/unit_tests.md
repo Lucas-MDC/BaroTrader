@@ -1,6 +1,12 @@
 <a id="registration-unit"></a>
 ### Unit
 
+Implemented suites:
+- [registerClient.test.js](../../../../tests/unity/register/registerClient.test.js)
+- [registerUtils.test.js](../../../../tests/unity/register/registerUtils.test.js)
+- [registerService.test.js](../../../../tests/unity/register/registerService.test.js)
+- [passwordService.test.js](../../../../tests/unity/register/passwordService.test.js)
+
 <a id="reg-unit-003"></a>
 #### ✅ REG-UNIT-003: missing bindings (client-side)
 Source: FE-REG-009
@@ -9,14 +15,12 @@ Conditions:
 - Missing username/password inputs prevent submission and show "Registration form is unavailable."
 
 <a id="reg-unit-004"></a>
-#### ✅ REG-UNIT-004: showMessage
+#### ✅ REG-UNIT-004: registration validation patterns and safe feedback
 Source: FE-SH-001
 Conditions:
-- A null or undefined target is a no-op and does not throw.
-- isError=false sets the text and applies the success color (#047857).
-- isError=true sets the text and applies the error color (#b91c1c).
-- Messages that contain HTML remain text-only (no XSS).
-- An empty message clears any previous text.
+- Username and password patterns match the current React form constraints.
+- Server feedback that contains HTML remains text-only when rendered by the component.
+- Feedback remains safe without restoring the deprecated standalone showMessage DOM API.
 
 <a id="reg-unit-005"></a>
 #### ✅ REG-UNIT-005: getCredentialsFromInputs

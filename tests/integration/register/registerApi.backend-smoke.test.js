@@ -1,6 +1,6 @@
 import request from 'supertest';
-import { getAuthConfig } from '../../config/index.js';
-import { createIntegrationDbHarness } from './support/dbHarness.js';
+import { getAuthConfig } from '../../../config/index.js';
+import { createIntegrationDbHarness } from '../support/dbHarness.js';
 
 /**
  * This test suite covers a smoke test for the registration endpoint with a real 
@@ -19,8 +19,8 @@ let getUserModel;
 beforeAll(async () => {
   await harness.setup();
 
-  ({ createApp } = await import('../../src/app.js'));
-  ({ getUserModel } = await import('../../src/models/user/index.js'));
+  ({ createApp } = await import('../../../src/app.js'));
+  ({ getUserModel } = await import('../../../src/models/user/index.js'));
 }, dbHookTimeoutMs);
 
 afterAll(async () => {

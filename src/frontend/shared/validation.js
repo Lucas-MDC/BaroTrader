@@ -1,4 +1,4 @@
-export const USERNAME_PATTERN = '^[a-z0-9](?:[a-z0-9._-]{1,30}[a-z0-9])?$';
+export const USERNAME_PATTERN = '^[a-z0-9](?:[a-z0-9._\\-]{1,30}[a-z0-9])?$';
 export const PASSWORD_PATTERN = '^(?=.*[A-Za-z])(?=.*\\d)[\\x21-\\x7E]{8,64}$';
 
 export const USERNAME_TITLE =

@@ -27,6 +27,7 @@
     "test:integration": "node scripts/test.js integration",
     "test:integration:debug": "node scripts/test.js integration:debug",
     "test:integration:report": "node scripts/test.js integration:report",
+    "test:e2e": "node scripts/e2e.js",
     "test:report": "node scripts/test.js report",
     "test:unit": "node scripts/test.js unit",
     "test:unit:report": "node scripts/test.js unit:report",
@@ -60,6 +61,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.63.0",
     "esbuild": "^0.28.0",
     "eslint": "^9.39.1",
     "globals": "^16.5.0",

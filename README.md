@@ -121,6 +121,7 @@ file, or a future vault. They must not be defined in `.env`.
 | `npm run test:integration` | Run integration tests with automatic local DB base setup |
 | `npm run test:integration:debug` | Run integration tests in-band |
 | `npm run test:coverage` | Run coverage with the same automatic test-base orchestration |
+| `npm run test:e2e` | Run Playwright browser tests with automatic test database orchestration |
 | `npm run db:setup` | Create runtime/migrator roles and application DB using `BAROTRADER_DB_ADMIN_*` |
 | `npm run db:migrate` | Run migrations using `MIGRATION_*` |
 | `npm run db:seed` | Run a smoke/seed flow as the runtime user |
@@ -190,7 +191,12 @@ scripts/
   validate-env.js
 tests/
   integration/
+    login/
+    register/
   unity/
+    login/
+    register/
+  e2e/
 ```
 
 ## Additional docs

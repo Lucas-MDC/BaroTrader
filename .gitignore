@@ -3,6 +3,8 @@ bins/
 coverage/
 src/public/build/
 src/public/assets/build/
+playwright-report/
+test-results/
 
 .env
 .codex

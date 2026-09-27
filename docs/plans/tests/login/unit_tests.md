@@ -1,15 +1,22 @@
 <a id="login-unit"></a>
 ### Unit
 
+Implemented suites:
+- [loginClient.test.js](../../../../tests/unity/login/loginClient.test.js)
+- [sessionClient.test.js](../../../../tests/unity/login/sessionClient.test.js)
+- [sessionService.test.js](../../../../tests/unity/login/sessionService.test.js)
+- [sessionCookie.test.js](../../../../tests/unity/login/sessionCookie.test.js)
+- [passport.test.js](../../../../tests/unity/login/passport.test.js)
+
 <a id="login-unit-001"></a>
-#### LOGIN-UNIT-001: missing bindings (client-side)
+#### ✅ LOGIN-UNIT-001: missing bindings (client-side)
 Source: Added
 Conditions:
 - Missing #login-form does not crash the component.
 - Missing username/password inputs prevent the request and show "Login form is unavailable.".
 
 <a id="login-unit-002"></a>
-#### LOGIN-UNIT-002: loginUser request construction
+#### ✅ LOGIN-UNIT-002: loginUser request construction
 Source: Added
 Conditions:
 - loginUser sends POST /api/login.
@@ -18,14 +25,14 @@ Conditions:
 - The response JSON is returned with the original Response object.
 
 <a id="login-unit-003"></a>
-#### LOGIN-UNIT-003: loginUser response parsing
+#### ✅ LOGIN-UNIT-003: loginUser response parsing
 Source: Added
 Conditions:
 - A JSON response body is returned as data.
 - A response without a JSON body does not throw and returns an empty data object.
 
 <a id="login-unit-004"></a>
-#### LOGIN-UNIT-004: getLoginErrorMessage
+#### ✅ LOGIN-UNIT-004: getLoginErrorMessage
 Source: Added
 Conditions:
 - A 401 response returns "Invalid username or password.".
@@ -34,7 +41,7 @@ Conditions:
 - An ok response returns an empty error message.
 
 <a id="login-unit-005"></a>
-#### LOGIN-UNIT-005: login service normalization and validation
+#### ✅ LOGIN-UNIT-005: login service normalization and validation
 Source: Added
 Conditions:
 - Username is trimmed before lookup.
@@ -43,7 +50,7 @@ Conditions:
 - Invalid credentials use status code 401 and the public message "Invalid username or password.".
 
 <a id="login-unit-006"></a>
-#### LOGIN-UNIT-006: login service password verification
+#### ✅ LOGIN-UNIT-006: login service password verification
 Source: Added
 Conditions:
 - findByUsername is called with the normalized username.
@@ -52,7 +59,7 @@ Conditions:
 - A non-matching hash returns invalid credentials.
 
 <a id="login-unit-007"></a>
-#### LOGIN-UNIT-007: login service unknown-user handling
+#### ✅ LOGIN-UNIT-007: login service unknown-user handling
 Source: Added
 Conditions:
 - Unknown users still execute password hashing with the dummy salt/password path.
@@ -60,7 +67,7 @@ Conditions:
 - The user model is not exposed in the error response.
 
 <a id="login-unit-008"></a>
-#### LOGIN-UNIT-008: login service error propagation
+#### ✅ LOGIN-UNIT-008: login service error propagation
 Source: Added
 Conditions:
 - Errors from findByUsername bubble up.
@@ -69,7 +76,7 @@ Conditions:
 - A zero loginResponseDeadlineMs adds no extra wait.
 
 <a id="login-unit-009"></a>
-#### LOGIN-UNIT-009: SessionError shape
+#### ✅ LOGIN-UNIT-009: SessionError shape
 Source: Added
 Conditions:
 - name is "SessionError".
@@ -77,7 +84,7 @@ Conditions:
 - message is preserved as provided.
 
 <a id="login-unit-010"></a>
-#### LOGIN-UNIT-010: session cookie issuance
+#### ✅ LOGIN-UNIT-010: session cookie issuance
 Source: Added
 Conditions:
 - issueSessionCookie signs a token with the configured algorithm, secret, and user id subject.
@@ -85,14 +92,14 @@ Conditions:
 - The token payload does not contain passwordHash or passwordSalt.
 
 <a id="login-unit-011"></a>
-#### LOGIN-UNIT-011: session cookie clearing
+#### ✅ LOGIN-UNIT-011: session cookie clearing
 Source: Added
 Conditions:
 - clearSessionCookie uses the configured cookie name and path.
 - The clearing options preserve the configured HttpOnly, Secure, and SameSite attributes.
 
 <a id="login-unit-012"></a>
-#### LOGIN-UNIT-012: local and JWT passport strategies
+#### ✅ LOGIN-UNIT-012: local and JWT passport strategies
 Source: Added
 Conditions:
 - The local strategy delegates to login and maps SessionError to authentication info.

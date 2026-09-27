@@ -65,7 +65,7 @@ function invalidCredentials() {
 
 async function verifyPassword({ user, password }) {
   const salt = user?.passwordSalt || DUMMY_PASSWORD_SALT;
-  const passwordForHash = password || DUMMY_PASSWORD;
+  const passwordForHash = user ? password : DUMMY_PASSWORD;
   const candidateHash = await hashPassword(passwordForHash, salt);
 
   if (!user) return false;

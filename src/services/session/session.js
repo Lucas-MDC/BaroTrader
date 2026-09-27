@@ -9,6 +9,14 @@ import { clearSessionCookie, issueSessionCookie } from './sessionCookie.js';
 
 const router = Router();
 
+function toPublicUser(user) {
+  return {
+    id: user.id,
+    username: user.username,
+    createdAt: user.createdAt
+  };
+}
+
 function handleLogin(req, res, next) {
   passport.authenticate('local', { session: false }, (error, user, info) => {
     if (error) return next(error);
@@ -21,7 +29,7 @@ function handleLogin(req, res, next) {
 
     issueSessionCookie(res, user);
 
-    return res.status(200).json({ user });
+    return res.status(200).json({ user: toPublicUser(user) });
   })(req, res, next);
 }
 

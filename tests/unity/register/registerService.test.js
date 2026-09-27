@@ -13,25 +13,25 @@ const sleep = jest.fn(() => Promise.resolve());
 const createPasswordSalt = jest.fn();
 const hashPassword = jest.fn();
 
-jest.unstable_mockModule('../../config/index.js', () => ({
+jest.unstable_mockModule('../../../config/index.js', () => ({
   getRegisterConfig
 }));
 
-jest.unstable_mockModule('../../src/models/user/index.js', () => ({
+jest.unstable_mockModule('../../../src/models/user/index.js', () => ({
   getUserModel
 }));
 
-jest.unstable_mockModule('../../src/services/register/sleep.js', () => ({
+jest.unstable_mockModule('../../../src/services/register/sleep.js', () => ({
   sleep
 }));
 
-jest.unstable_mockModule('../../src/services/register/passwordService.js', () => ({
+jest.unstable_mockModule('../../../src/services/register/passwordService.js', () => ({
   createPasswordSalt,
   hashPassword
 }));
 
 const { registerUser, RegistrationError } = await import(
-  '../../src/services/register/registerService.js'
+  '../../../src/services/register/registerService.js'
 );
 
 const baseConfig = {
@@ -69,6 +69,10 @@ beforeEach(() => {
   getRegisterConfig.mockReturnValue({ ...baseConfig });
   createPasswordSalt.mockReturnValue('salt');
   hashPassword.mockResolvedValue('hash');
+});
+
+afterEach(() => {
+  jest.useRealTimers();
 });
 
 describe('RegistrationError', () => {
@@ -227,6 +231,45 @@ describe('registerUser error propagation', () => {
       registerUser({ username: 'user', password: 'abc1' })
     ).rejects.toBe(error);
   });
+
+  test('duplicate errors still respect the minimum delay', async () => {
+    // REG-UNIT-010: register service error propagation
+    jest.useFakeTimers();
+    sleep.mockImplementation((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+    getRegisterConfig.mockReturnValue({ ...baseConfig, registerMinDelayMs: 300 });
+    userModel.findByUsername.mockResolvedValue({ id: 99 });
+
+    let rejected = false;
+    const promise = registerUser({ username: 'user', password: 'abc1' }).catch(() => {
+      rejected = true;
+    });
+
+    await flushPromises();
+    expect(rejected).toBe(false);
+    await jest.advanceTimersByTimeAsync(300);
+    await promise;
+    expect(rejected).toBe(true);
+  });
+
+  test('dependency errors still respect the minimum delay', async () => {
+    // REG-UNIT-010: register service error propagation
+    jest.useFakeTimers();
+    sleep.mockImplementation((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+    getRegisterConfig.mockReturnValue({ ...baseConfig, registerMinDelayMs: 300 });
+    const error = new Error('lookup failed');
+    userModel.findByUsername.mockRejectedValue(error);
+
+    let rejectedError;
+    const promise = registerUser({ username: 'user', password: 'abc1' }).catch((caught) => {
+      rejectedError = caught;
+    });
+
+    await flushPromises();
+    expect(rejectedError).toBeUndefined();
+    await jest.advanceTimersByTimeAsync(300);
+    await promise;
+    expect(rejectedError).toBe(error);
+  });
 });
 
 describe('registerUser minimum delay', () => {
@@ -299,4 +342,3 @@ describe('registerUser minimum delay', () => {
     expect(sleep).not.toHaveBeenCalled();
   });
 });
-
