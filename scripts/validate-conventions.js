@@ -14,6 +14,21 @@ const protectedBranches = [
   "production",
 ];
 
+const allowedBranchCategories = [
+  "feature",
+  "bugfix",
+  "hotfix",
+  "test",
+  "experiment",
+  "docs",
+  "refactor",
+  "ops",
+];
+
+const branchNamePattern = new RegExp(
+  `^(?:${allowedBranchCategories.join("|")})/(?:(?<reference>[0-9]+|[A-Z]+-[0-9]+)/)?[a-z][a-z0-9]*(?:-[a-z0-9]+)*$`
+);
+
 const allowedReferences = [
   // "123",
   // "PROJ-123",
@@ -120,9 +135,7 @@ export function isValidBranchName(branchName, defaultBranchName = "") {
     return true;
   }
 
-  const branchMatch = branchName.match(
-    /^(?:feature|bugfix|hotfix|test)\/(?:(?<reference>[0-9]+|[A-Z]+-[0-9]+)\/)?[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/
-  );
+  const branchMatch = branchName.match(branchNamePattern);
   const reference = branchMatch?.groups?.reference;
 
   return Boolean(branchMatch)

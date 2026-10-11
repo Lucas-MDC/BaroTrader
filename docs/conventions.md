@@ -2,17 +2,36 @@
 
 ## Branch naming conventions:
 ```
-<category>/<reference>/description-in-kebab-case
+<category>/[<reference>/]description-in-kebab-case
 ```
 
 ### Category
-- `feature`: for adding, refactoring or removing a feature
-- `bugfix`: for fixing a bug
-- `hotfix`: for critical, immediate production fixes
-- `test`: for experimenting outside of an issue/ticket
+- `feature`: for adding, changing or removing product behavior
+- `bugfix`: for fixing a non-critical bug
+- `hotfix`: for fixing a critical production issue
+- `test`: for adding or changing automated tests or test plans
+- `experiment`: for evaluating a tool or approach, or building a proof of concept
+- `docs`: for changes that only update documentation
+- `refactor`: for restructuring code without changing its behavior
+- `ops`: for CI/CD, deployment, infrastructure or environment configuration work
 
 ### Reference (optional)
-Put the ID of the issue you're working on.
+Use the issue ID, either numeric (for example, `123`) or project-key format
+(for example, `PROJ-123`).
+
+Examples:
+
+- `feature/expand-branch-categories`
+- `bugfix/123/fix-login-timeout`
+- `experiment/evaluate-adr-manager`
+- `docs/PROJ-123/document-branch-workflow`
+
+### Automatic validation
+
+- The local Husky `pre-push` hook validates branches being pushed using
+  `scripts/validate-conventions.js`.
+- The GitHub Actions workflow `Validate Conventions` imports the same branch
+  validator, keeping the accepted categories and naming rules consistent.
 
 ## Commit messages conventions:
 ```
