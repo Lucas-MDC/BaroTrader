@@ -3,5 +3,6 @@
     "**/node_modules": true
   },
   "jest.runMode": "deferred",
-  "jest.jestCommandLine": "npm run test --"
+  "jest.jestCommandLine": "npm run test --",
+  "adrManager.adrDirectory": "docs/decisions"
 }
