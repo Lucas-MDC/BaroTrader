@@ -17,6 +17,7 @@ import {
   USERNAME_TITLE,
   getCredentialsFromInputs
 } from '../shared/validation.js';
+import { useAuth } from '../shared/authContext.jsx';
 
 const initialFeedback = {
   message: '',
@@ -25,6 +26,7 @@ const initialFeedback = {
 
 export default function Register() {
   const navigate = useNavigate();
+  const { setAuthenticatedUser } = useAuth();
   const formRef = useRef(null);
   const usernameRef = useRef(null);
   const passwordRef = useRef(null);
@@ -72,6 +74,11 @@ export default function Register() {
         return;
       }
 
+      setAuthenticatedUser({
+        id: data.id,
+        username: data.username,
+        createdAt: data.createdAt
+      });
       showMessage('Registration complete! Redirecting...');
       window.setTimeout(() => {
         navigate(ACCOUNT_ROUTE, { replace: true });

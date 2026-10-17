@@ -28,6 +28,7 @@ async function loadPage({ includeFeedback = true } = {}) {
     useNavigationType
   } = await import('react-router-dom');
   const { default: Home } = await import('../../../src/frontend/pages/Home.jsx');
+  const { AuthProvider } = await import('../../../src/frontend/shared/authContext.jsx');
 
   act = react.act;
   const container = document.createElement('div');
@@ -45,7 +46,11 @@ async function loadPage({ includeFeedback = true } = {}) {
       react.createElement(
         MemoryRouter,
         { initialEntries: [HOME_ROUTE] },
-        react.createElement(Home),
+        react.createElement(
+          AuthProvider,
+          null,
+          react.createElement(Home)
+        ),
         react.createElement(RouterObserver)
       )
     );
@@ -156,7 +161,11 @@ describe('login client JSDOM integration', () => {
     usernameInput.value = '  user  ';
     passwordInput.value = 'Pass1234!';
     form.checkValidity = () => true;
-    mockFetchResponse({ ok: true, status: 200, json: { user: { id: 1 } } });
+    mockFetchResponse({
+      ok: true,
+      status: 200,
+      json: { user: { id: 1, username: 'user' } }
+    });
 
     await submitForm(form);
 

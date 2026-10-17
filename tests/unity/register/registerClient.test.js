@@ -15,11 +15,15 @@ global.TextEncoder = TextEncoder;
 let root;
 let MemoryRouter;
 let Register;
+let AuthProvider;
 
 beforeAll(async () => {
   ({ MemoryRouter } = await import('react-router-dom'));
   ({ default: Register } = await import(
     '../../../src/frontend/pages/Register.jsx'
+  ));
+  ({ AuthProvider } = await import(
+    '../../../src/frontend/shared/authContext.jsx'
   ));
 });
 
@@ -33,7 +37,7 @@ async function renderRegister() {
       createElement(
         MemoryRouter,
         { initialEntries: ['/register'] },
-        createElement(Register)
+        createElement(AuthProvider, null, createElement(Register))
       )
     );
   });

@@ -7,16 +7,17 @@ npm run test:unit
 npm run test:integration
 ```
 
-Install the Playwright Chromium browser once on a new machine or CI runner:
-
-```bash
-npx playwright install --with-deps chromium
-```
-
-Run the login and registration browser suites:
+Run the login and registration browser suites. The npm script installs the
+selected Playwright browser when it is missing; Chromium is the default.
 
 ```bash
 npm run test:e2e
+```
+
+To run the suite in another supported browser, pass Playwright's browser option:
+
+```bash
+npm run test:e2e -- --browser=firefox
 ```
 
 The E2E runner validates the test environment, provisions the logical test

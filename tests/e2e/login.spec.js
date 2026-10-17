@@ -4,6 +4,34 @@ const sessionCookieName =
   process.env.BAROTRADER_JWT_COOKIE_NAME || '__Host-bt_session';
 
 test.describe('login flow', () => {
+  test('redirects a protected page to login and returns to it after authentication', async ({
+    page,
+    seedUser
+  }) => {
+    await page.goto('/account');
+    await expect(page).toHaveURL(/\/login$/);
+
+    await page.locator('#username-login').fill(seedUser.username);
+    await page.locator('#password-login').fill(seedUser.password);
+    await page.locator('#login-button').click();
+
+    await expect(page).toHaveURL(/\/account$/);
+    await expect(page.locator('#logout-button')).toBeVisible();
+  });
+
+  test('redirects an authenticated visit to login to account', async ({ page, seedUser }) => {
+    await page.goto('/');
+    await page.locator('#username-login').fill(seedUser.username);
+    await page.locator('#password-login').fill(seedUser.password);
+    await page.locator('#login-button').click();
+    await expect(page).toHaveURL(/\/account$/);
+
+    await page.goto('/login');
+
+    await expect(page).toHaveURL(/\/account$/);
+    await expect(page.locator('#logout-button')).toBeVisible();
+  });
+
   test('logs in a seeded user and retains an HttpOnly session cookie', async ({
     page,
     seedUser

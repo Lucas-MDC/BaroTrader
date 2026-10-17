@@ -27,3 +27,10 @@ Source: Added
 Conditions:
 - Missing #logout-button does not throw.
 
+<a id="nav-unit-005"></a>
+#### NAV-UNIT-005: login return location safety
+Source: Added
+Conditions:
+- Internal paths preserve their query and hash when returned to after login.
+- External, malformed, or `/login` return paths fall back to `/account`.
+

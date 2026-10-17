@@ -4,6 +4,7 @@ HTTP routes for stateless session management.
 
 import passport from 'passport';
 import { Router } from 'express';
+import { requireApiAuth } from '../../auth/authMiddleware.js';
 import { INVALID_CREDENTIALS_MESSAGE, logout } from './sessionService.js';
 import { clearSessionCookie, issueSessionCookie } from './sessionCookie.js';
 
@@ -40,6 +41,22 @@ function handleLogout(_req, res) {
   return res.status(204).end();
 }
 
+function handleGetSession(req, res) {
+  return res
+    .set('Cache-Control', 'no-store')
+    .status(200)
+    .json({ user: req.user });
+}
+
+router.get(
+  '/session',
+  (_req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    next();
+  },
+  requireApiAuth,
+  handleGetSession
+);
 router.post('/login', handleLogin);
 router.delete('/logout', handleLogout);
 

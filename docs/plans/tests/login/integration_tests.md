@@ -33,6 +33,7 @@ Conditions:
 - The payload contains the trimmed username and the raw password.
 - A 200 response navigates to /account through SPA navigation.
 - Navigation replaces the login history entry.
+- Home and `/login` consume the same login form component.
 
 <a id="login-int-004"></a>
 #### ✅ LOGIN-INT-004: invalid credentials response
@@ -66,6 +67,7 @@ Conditions:
 - Successful responses issue the authenticated session cookie.
 - Invalid credentials return HTTP 401 with the public error message.
 - Malformed or incomplete payloads do not reach a successful authentication path.
+- GET `/api/session` returns HTTP 401 when the JWT cookie is missing.
 
 <a id="login-int-008"></a>
 #### ✅ LOGIN-INT-008: login service with real DB
