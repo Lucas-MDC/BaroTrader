@@ -33,16 +33,17 @@ npm run test:coverage
 
 ### Browser E2E tests
 
-Install the Playwright Chromium browser once on a new machine or CI runner:
-
-```bash
-npx playwright install --with-deps chromium
-```
-
-Run the registration and login browser suites:
+Run the registration and login browser suites. The npm script installs the
+selected Playwright browser when it is missing; Chromium is the default.
 
 ```bash
 npm run test:e2e
+```
+
+To run the suite in another supported browser, pass Playwright's browser option:
+
+```bash
+npm run test:e2e -- --browser=firefox
 ```
 
 The E2E runner validates the test environment, starts the local PostgreSQL base

@@ -20,6 +20,7 @@ const PUBLIC_ASSET_TYPES = ['css', 'images', 'icons', 'fonts'];
 
 const FRONTEND_ROUTES = [
   '/',
+  '/login',
   '/register',
   '/account'
 ];

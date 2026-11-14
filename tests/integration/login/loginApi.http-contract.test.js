@@ -76,6 +76,21 @@ describe('login API HTTP contract', () => {
     expect(response.headers['set-cookie']).toBeUndefined();
   });
 
+  test('requires a valid JWT for the current-session endpoint', async () => {
+    const response = await request(createApp()).get('/api/session');
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ error: 'Authentication required.' });
+    expect(response.headers['cache-control']).toMatch(/no-store/);
+  });
+
+  test('serves the login SPA route', async () => {
+    const response = await request(createApp()).get('/login');
+
+    expect(response.status).toBe(200);
+    expect(response.text).toContain('<div id="root"></div>');
+  });
+
   test('malformed or incomplete payloads cannot reach successful authentication', async () => {
     // LOGIN-INT-007: login API HTTP contract
     login.mockResolvedValue({ id: 1, username: 'unexpected', createdAt: 'now' });

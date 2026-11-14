@@ -1,12 +1,29 @@
 import { jest } from '@jest/globals';
 
-const { getLoginErrorMessage, loginUser } = await import(
+const { getCurrentSession, getLoginErrorMessage, loginUser } = await import(
   '../../../src/frontend/shared/sessionClient.js'
 );
 
 describe('session client', () => {
   afterEach(() => {
     delete global.fetch;
+  });
+
+  test('getCurrentSession requests the current session without caching', async () => {
+    const response = {
+      status: 200,
+      ok: true,
+      json: jest.fn().mockResolvedValue({ user: { id: 1 } })
+    };
+    global.fetch = jest.fn().mockResolvedValue(response);
+
+    const result = await getCurrentSession();
+
+    expect(global.fetch).toHaveBeenCalledWith('/api/session', {
+      cache: 'no-store',
+      credentials: 'same-origin'
+    });
+    expect(result).toEqual({ response, data: { user: { id: 1 } } });
   });
 
   test('loginUser sends a JSON POST request and returns the response', async () => {

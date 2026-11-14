@@ -21,3 +21,17 @@ Source: Added
 Conditions:
 - Clicking the register link navigates to the register page.
 
+<a id="nav-e2e-004"></a>
+#### NAV-E2E-004: unauthenticated protected page and return path
+Source: Added
+Conditions:
+- Visiting `/account` without a valid session redirects to `/login`.
+- Successful login returns to `/account`.
+- The Account page renders after the session is established.
+
+<a id="nav-e2e-005"></a>
+#### NAV-E2E-005: authenticated user opening login
+Source: Added
+Conditions:
+- An authenticated user visiting `/login` is redirected to `/account`.
+

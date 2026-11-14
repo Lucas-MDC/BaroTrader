@@ -26,7 +26,13 @@ Conditions:
 #### SRV-INT-004: account SPA entrypoint
 Source: Added
 Conditions:
-- GET /account returns the SPA shell without page-level authentication.
+- GET /account returns the SPA shell; React checks the session before rendering Account.
+
+<a id="srv-int-010"></a>
+#### SRV-INT-010: login SPA entrypoint
+Source: Added
+Conditions:
+- GET /login returns the SPA shell.
 
 <a id="srv-int-005"></a>
 #### SRV-INT-005: API router mount

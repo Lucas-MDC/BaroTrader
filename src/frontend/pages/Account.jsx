@@ -2,9 +2,11 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HOME_ROUTE } from '../shared/navigation.js';
 import { logoutUser } from '../shared/sessionClient.js';
+import { useAuth } from '../shared/authContext.jsx';
 
 export default function Account() {
   const navigate = useNavigate();
+  const { clearAuthentication } = useAuth();
 
   useEffect(() => {
     document.title = 'Account';
@@ -18,6 +20,7 @@ export default function Account() {
     } catch (err) {
       console.error('Failed to logout', err);
     } finally {
+      clearAuthentication();
       navigate(HOME_ROUTE, { replace: true });
     }
   }

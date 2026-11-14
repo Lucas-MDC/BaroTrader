@@ -11,10 +11,12 @@ global.TextEncoder = TextEncoder;
 let root;
 let MemoryRouter;
 let Home;
+let AuthProvider;
 
 beforeAll(async () => {
   ({ MemoryRouter } = await import('react-router-dom'));
   ({ default: Home } = await import('../../../src/frontend/pages/Home.jsx'));
+  ({ AuthProvider } = await import('../../../src/frontend/shared/authContext.jsx'));
 });
 
 async function renderHome() {
@@ -27,7 +29,7 @@ async function renderHome() {
       createElement(
         MemoryRouter,
         { initialEntries: ['/'] },
-        createElement(Home)
+        createElement(AuthProvider, null, createElement(Home))
       )
     );
   });

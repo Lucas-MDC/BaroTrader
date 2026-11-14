@@ -7,6 +7,9 @@ export default defineConfig([
     ignores: [
       "src/public/build/**",
       "src/public/assets/build/**",
+      "playwright-report/**",
+      "test-results/**",
+      "coverage/**",
     ],
   },
   {

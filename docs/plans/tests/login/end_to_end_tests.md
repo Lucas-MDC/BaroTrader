@@ -42,3 +42,11 @@ Conditions:
 - After a successful login, the browser retains the session cookie.
 - Navigation to /account completes through the SPA route.
 - The session cookie is not readable through client-side JavaScript.
+
+<a id="login-e2e-006"></a>
+#### ✅ LOGIN-E2E-006: protected route return flow
+Source: Added
+Conditions:
+- Opening `/account` without a session redirects to `/login`.
+- Successful login returns to `/account`.
+- Opening `/login` with an active session redirects to `/account`.

@@ -24,6 +24,7 @@ const playwrightCli = path.join(
   'test',
   'cli.js'
 );
+const supportedBrowsers = new Set(['chromium', 'firefox', 'webkit', 'all']);
 
 function envFlag(name) {
   const value = String(process.env[name] || '').toLowerCase();
@@ -64,6 +65,33 @@ function runStatus(command, args, label) {
   return result.status || 0;
 }
 
+function getRequestedBrowser(args) {
+  const browserOptionIndex = args.findIndex(
+    (arg) => arg === '--browser' || arg.startsWith('--browser=')
+  );
+  if (browserOptionIndex === -1) return 'chromium';
+
+  const browserArgument = args[browserOptionIndex];
+  const browser = browserArgument === '--browser'
+    ? args[browserOptionIndex + 1]
+    : browserArgument.slice('--browser='.length);
+
+  if (!supportedBrowsers.has(browser)) {
+    throw new Error(
+      `Unsupported Playwright browser "${browser}". Choose chromium, firefox, webkit, or all.`
+    );
+  }
+
+  return browser;
+}
+
+function ensurePlaywrightBrowser(browser) {
+  const installArgs = [playwrightCli, 'install'];
+  if (browser !== 'all') installArgs.push(browser);
+
+  run(process.execPath, installArgs, `Installing Playwright browser: ${browser}`);
+}
+
 function startLocalDatabase() {
   run('docker', ['compose', '-f', composeFile, 'up', '-d', '--wait', 'db'], 'Starting the E2E database');
 }
@@ -82,16 +110,21 @@ function stopLocalDatabase() {
 }
 
 async function main() {
-  const localDatabaseStarted = !isCi();
+  const ownsLocalDatabase = !isCi();
+  let localDatabaseStarted = false;
   let harness;
   let exitCode = 1;
 
   try {
-    if (localDatabaseStarted) {
+    const browser = getRequestedBrowser(process.argv.slice(2));
+    ensurePlaywrightBrowser(browser);
+
+    if (ownsLocalDatabase) {
       process.env.DB_HOST = localDbHost;
       process.env.DB_PORT = localDbPort;
       process.env.APP_HOST = '127.0.0.1';
       process.env.APP_PORT = e2ePort;
+      localDatabaseStarted = true;
       startLocalDatabase();
     } else {
       process.env.DB_HOST ||= localDbHost;

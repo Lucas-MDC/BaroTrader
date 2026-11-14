@@ -29,7 +29,8 @@ paths are no longer part of the contract.
 
 | Page | Route | Component |
 | --- | --- | --- |
-| Home and login | `/` | `Home` |
+| Home | `/` | `Home` |
+| Login | `/login` | `Login` |
 | Registration | `/register` | `Register` |
 | Account | `/account` | `Account` |
 
@@ -38,9 +39,18 @@ request to Express. Opening a route directly, refreshing the page, or opening a
 link in another tab requires an initial GET; in that case, Express serves the
 shell and React renders the corresponding route.
 
-`/account` is a public UI route. Its shell can be rendered without a session.
-Private data displayed on this page in the future must come from
-authentication-protected services, which form the actual security boundary.
+`/account` requires an authenticated session before React renders the page.
+Express still serves the SPA shell for direct route visits; the React route
+guard checks the session before rendering account content. Private data must
+also come from authentication-protected services, which form the server-side
+security boundary.
+
+`/` (Home), `/login`, and `/register` are public routes. Home and Login share
+the same login form component. When an unauthenticated user requests a protected
+route, React redirects to `/login` and keeps the requested internal location.
+After login, the app returns to that location, or to `/account` when `/login`
+was opened directly. An authenticated visit to `/login` redirects to
+`/account`.
 
 ## HTTP routing order
 
@@ -49,7 +59,7 @@ The Express router must maintain this precedence:
 1. Fixed assets under `/static/assets`.
 2. Exact bundle at `/spa/app.js`.
 3. Services under `/api`.
-4. Shell for `/`, `/register`, and `/account`.
+4. Shell for `/`, `/login`, `/register`, and `/account`.
 5. 404 response.
 6. Error handling.
 
@@ -107,10 +117,14 @@ remove resources:
 | --- | --- |
 | `POST /api/register` | Create a user and start their session |
 | `POST /api/login` | Authenticate a user and start their session |
+| `GET /api/session` | Validate the current JWT and return the public user or HTTP 401 |
 | `DELETE /api/logout` | End the current session |
 
 Future protected services must use JWT authentication before returning account
-information.
+information. `GET /api/session` and protected services use `requireApiAuth`;
+the React route guard handles page navigation separately. Frontend clients for
+protected services use `fetchAuthenticated`, which clears the local session
+state when an API responds with HTTP 401.
 
 ## Session created by registration
 

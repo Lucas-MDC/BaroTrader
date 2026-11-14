@@ -105,3 +105,10 @@ Conditions:
 - The local strategy delegates to login and maps SessionError to authentication info.
 - The JWT strategy rejects invalid or unknown user ids.
 - A valid JWT user is mapped to public fields without password data.
+
+<a id="login-unit-013"></a>
+#### ✅ LOGIN-UNIT-013: current session request
+Source: Added
+Conditions:
+- `getCurrentSession` sends GET `/api/session` with cache disabled.
+- The response JSON and original Response object are returned.

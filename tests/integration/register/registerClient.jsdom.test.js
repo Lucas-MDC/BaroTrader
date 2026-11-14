@@ -30,6 +30,9 @@ async function loadPage({ includeFeedback = true } = {}) {
   const { default: Register } = await import(
     '../../../src/frontend/pages/Register.jsx'
   );
+  const { AuthProvider } = await import(
+    '../../../src/frontend/shared/authContext.jsx'
+  );
 
   act = react.act;
 
@@ -47,7 +50,11 @@ async function loadPage({ includeFeedback = true } = {}) {
       react.createElement(
         MemoryRouter,
         { initialEntries: [REGISTER_ROUTE] },
-        react.createElement(Register),
+        react.createElement(
+          AuthProvider,
+          null,
+          react.createElement(Register)
+        ),
         react.createElement(LocationObserver)
       )
     );
